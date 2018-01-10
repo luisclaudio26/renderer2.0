@@ -3,6 +3,7 @@
 
 #include "../core/material.h"
 #include "../core/spectrum.h"
+#include <glm/gtx/string_cast.hpp>
 
 //Nothing special; this is just a material
 //which properly implements the materials
@@ -25,6 +26,16 @@ public:
 
   // 1 == opaque; 0 == fully transparent
   float dissolve; int dissolve_tex;
+
+
+  std::string str() const override
+  {
+    std::string out("");
+    out += std::string("amb: ") + glm::to_string(ambient);
+    out += std::string(" diff: ") + glm::to_string(diffuse);
+    out += std::string(" spec: ") + glm::to_string(specular);
+    return out;
+  }
 };
 
 #endif

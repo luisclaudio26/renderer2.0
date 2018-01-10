@@ -22,12 +22,7 @@ public:
 
   void generate_primitives(std::vector<Primitive>& target) const override;
 
-  std::string str() const
-  {
-    std::string out("");
-    out += std::to_string(tris.size()) + std::string(" triangles");
-    return out;
-  }
+  std::string str() const override;
 };
 
 #endif

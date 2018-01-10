@@ -20,6 +20,12 @@ private:
 public:
   ImageTexture(const std::string& path);
   ~ImageTexture() override;
+  std::string str() const override
+  {
+      std::string out("");
+      out += std::to_string(w) + std::string("x") + std::to_string(h);
+      return out;
+  }
 };
 
 #endif

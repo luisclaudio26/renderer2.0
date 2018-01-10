@@ -11,9 +11,9 @@ bool SceneLoader::load_scene_from_json(const nlohmann::json& in)
 
   //log stuff
   printf("-----------------------\n");
-  printf("Camera\n%s\n", this->camera->str().c_str());
-  printf("Background\n%s\n", this->bgd->str().c_str());
-  for( auto s : this->shapes ) printf("Shape: %s\n", s->str().c_str());
+  printf("Camera -> %s\n", this->camera->str().c_str());
+  printf("Background -> %s\n", this->bgd->str().c_str());
+  for( auto s : this->shapes ) printf("Shape -> %s\n", s->str().c_str());
   printf("-----------------------\n");
 
   return true;

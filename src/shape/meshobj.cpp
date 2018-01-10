@@ -2,7 +2,20 @@
 #include "../../include/material/mtl.h"
 #include "../../include/texture/imagetexture.h"
 #include "../../include/util/log.h"
+#include <glm/gtc/type_ptr.hpp>
 
+static std::string fix_path(const std::string& path)
+{
+  std::string out;
+  for(int i = 0; i < path.length(); ++i)
+    if(path[i] == '\\') out += '/';
+    else out += path[i];
+  return out;
+}
+
+//----------------------------------
+//--------- FROM MESHOBJ.H ---------
+//----------------------------------
 void MeshOBJ::generate_primitives(std::vector<Primitive>& target) const
 {
 
@@ -57,6 +70,14 @@ void MeshOBJ::load_material_data(const std::string& basedir,
   {
     MTL *new_m = new MTL;
     new_m->illum_model = m->illum;
+    new_m->emission = glm::make_vec3(m->emission);
+    new_m->ambient = glm::make_vec3(m->ambient);
+    new_m->diffuse = glm::make_vec3(m->diffuse);
+    new_m->specular = glm::make_vec3(m->specular);
+    new_m->transmittance = glm::make_vec3(m->transmittance);
+    new_m->dissolve = m->dissolve;
+    new_m->ior = m->ior;
+    new_m->shininess = m->shininess;
 
     //load texture (if they exist)
     //TODO: this assumes texture is an image, but .obj
@@ -87,7 +108,21 @@ void MeshOBJ::load_material_data(const std::string& basedir,
 
 void MeshOBJ::set_texture(const std::string& path, int& target_id)
 {
-  ImageTexture *im = new ImageTexture(path);
+  ImageTexture *im = new ImageTexture( fix_path(path) );
   this->textures.push_back( Texture::ptr(im) );
   target_id = this->textures.size()-1;
+}
+
+std::string MeshOBJ::str() const
+{
+  std::string out("");
+  out += std::to_string(tris.size()) + std::string(" triangles\n");
+
+  for( auto m : materials )
+    out += std::string("\t") + m->str() + std::string("\n");
+
+  for( auto t : textures )
+    out += std::string("\t") + t->str() + std::string("\n");
+
+  return out;
 }

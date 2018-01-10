@@ -2,6 +2,7 @@
 #define MATERIAL_H
 
 #include <memory>
+#include <string>
 #include "../../3rdparty/json.hpp"
 #include "texture.h"
 
@@ -24,6 +25,8 @@ public:
   static void load_from_json(const nlohmann::json& in,
                               std::vector<Material::ptr>& target_mat,
                               std::vector<Texture::ptr>& target_tex);
+
+  virtual std::string str() const = 0;
 };
 
 #endif
