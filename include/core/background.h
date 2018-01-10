@@ -5,6 +5,7 @@
 #include "geometry.h"
 #include "../../3rdparty/json.hpp"
 #include <memory>
+#include <string>
 
 class Background
 {
@@ -14,6 +15,7 @@ public:
   virtual RGB sample(const Ray& r) const = 0;
 
   static Background::ptr load_from_json(const nlohmann::json& in);
+  virtual std::string str() const = 0;
 };
 
 #endif

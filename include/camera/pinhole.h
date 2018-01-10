@@ -23,6 +23,14 @@ public:
           int hRes, int vRes);
 
   Ray getRay(const Vec2& uv) const override;
+
+  std::string str() const override
+  {
+    std::string out("");
+    out += "Aspect ratio " + std::to_string(ar);
+    out += ", film width " + std::to_string(fw);
+    return out;
+  }
 };
 
 #endif

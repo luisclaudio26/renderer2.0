@@ -16,6 +16,12 @@ public:
   void load_material_data(const std::vector<tinyobj::material_t>& materials);
 
   void generate_primitives(std::vector<Primitive>& target) const override;
+  std::string str() const
+  {
+    std::string out("");
+    out += std::to_string(tris.size()) + std::string(" triangles");
+    return out;
+  }
 };
 
 #endif

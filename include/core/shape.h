@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <vector>
+#include <string>
 #include "geometry.h"
 #include "material.h"
 #include "texture.h"
@@ -28,6 +29,7 @@ public:
   virtual void generate_primitives(std::vector<Primitive>& target) const = 0;
 
   static Shape::ptr load_from_json(const nlohmann::json& in);
+  virtual std::string str() const = 0;
 };
 
 #endif

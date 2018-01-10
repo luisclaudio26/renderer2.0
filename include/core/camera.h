@@ -2,6 +2,7 @@
 #define CAMERA_H
 
 #include <memory>
+#include <string>
 #include "geometry.h"
 #include "../../3rdparty/json.hpp"
 
@@ -13,6 +14,7 @@ public:
 	virtual Ray getRay(const Vec2& uv) const = 0;
 
   static Camera::ptr load_from_json(const nlohmann::json& in);
+  virtual std::string str() const = 0;
 };
 
 #endif
