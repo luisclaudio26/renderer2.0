@@ -14,10 +14,11 @@ file(GLOB SOURCES "src/*.cpp"
                   "src/camera/*.cpp"
                   "src/util/*.cpp"
                   "src/shape/*.cpp"
-                  "src/texture/*.cpp")
+                  "src/texture/*.cpp"
+                  "src/integrator/*.cpp")
 
 #Link static libraries
 link_directories(3rdparty)
 
 add_executable(raytracer ${SOURCES})
-target_link_libraries(raytracer tinyobjloader)
+target_link_libraries(raytracer tinyobjloader freeimage m)
