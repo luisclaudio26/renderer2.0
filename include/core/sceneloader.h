@@ -21,7 +21,7 @@ private:
   std::vector<Primitive::ptr> prims;
   std::vector<Material::ptr> materials;
   std::vector<Texture::ptr> textures;
-
+  
 public:
   bool load_scene_from_json(const nlohmann::json& in);
   void generate_scene(Scene& target);

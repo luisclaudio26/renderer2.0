@@ -12,7 +12,8 @@ include_directories(include)
 file(GLOB SOURCES "src/*.cpp"
                   "src/core/*.cpp"
                   "src/camera/*.cpp"
-                  "src/util/*.cpp")
+                  "src/util/*.cpp"
+                  "src/shape/*.cpp")
 
 #Link static libraries
 link_directories(3rdparty)

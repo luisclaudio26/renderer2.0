@@ -7,11 +7,12 @@
 #include "material.h"
 #include "texture.h"
 #include "primitive.h"
+#include "../../3rdparty/json.hpp"
 
 class Shape
 {
-private:
-  Mat4 model2world;
+public:
+  typedef std::shared_ptr<Shape> ptr;
 
   //a single shape may have many materials, and a
   //single material can have use many texture channels.
@@ -21,11 +22,12 @@ private:
   std::vector<Material> materials;
   std::vector<Texture> textures;
 
-public:
-  typedef std::shared_ptr<Shape> ptr;
+  Mat4 model2world;
 
   //this method won't erase any contents that TARGET may eventually have
   virtual void generate_primitives(std::vector<Primitive>& target) const = 0;
+
+  static Shape::ptr load_from_json(const nlohmann::json& in);
 };
 
 #endif
