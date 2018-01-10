@@ -1,6 +1,7 @@
 #include <fstream>
 #include "../3rdparty/json.hpp"
 #include "../include/core/sceneloader.h"
+#include "../include/core/integrator.h"
 
 int main(int argc, char** args)
 {
@@ -12,14 +13,16 @@ int main(int argc, char** args)
 
   //load data
   SceneLoader loader;
-  loader.load_scene_from_json( json );
+  loader.load_scene_from_json( j );
+
+  Integrator::ptr integrator = Integrator::load_from_json( j );
 
   //preprocess scene
   Scene scene;
   loader.generate_scene(scene);
 
   //hora do show
-  scene.render();
+  integrator->render(scene);
 
   return 0;
 }

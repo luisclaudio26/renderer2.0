@@ -11,8 +11,6 @@
 class Shape
 {
 private:
-  typedef std::shared_ptr<Shape> ptr;
-
   Mat4 model2world;
 
   //a single shape may have many materials, and a
@@ -24,6 +22,8 @@ private:
   std::vector<Texture> textures;
 
 public:
+  typedef std::shared_ptr<Shape> ptr;
+
   //this method won't erase any contents that TARGET may eventually have
   virtual void generate_primitives(std::vector<Primitive>& target) const = 0;
 };

@@ -9,7 +9,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -std=c++11 -g")
 include_directories(include)
 
 #Source files
-file(GLOB SOURCES "src/*.cpp")
+file(GLOB SOURCES "src/*.cpp"
+                  "src/core/*.cpp")
 
 #Link static libraries
 link_directories(3rdparty)
