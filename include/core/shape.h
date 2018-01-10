@@ -20,8 +20,8 @@ public:
   //primitives generated with generate_primitives() have their
   //material/texture pointers indexing elements in these two
   //vectors
-  std::vector<Material> materials;
-  std::vector<Texture> textures;
+  std::vector<Material::ptr> materials;
+  std::vector<Texture::ptr> textures;
 
   Mat4 model2world;
 

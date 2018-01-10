@@ -1,4 +1,6 @@
 #include "../../include/shape/meshobj.h"
+#include "../../include/material/mtl.h"
+#include "../../include/texture/imagetexture.h"
 #include "../../include/util/log.h"
 
 void MeshOBJ::generate_primitives(std::vector<Primitive>& target) const
@@ -45,5 +47,46 @@ void MeshOBJ::load_geometry_data(const std::vector<tinyobj::shape_t>& shapes,
 
 void MeshOBJ::load_material_data(const std::vector<tinyobj::material_t>& materials)
 {
+  //fill this->materials vector with data from material_t vector
+  //Order must be the same, so the pointers in the triangles will be valid
+  //Also, load images
+  //TODO: retrieve texture names, decompress, load and store inside
+  //textures vector
+  for(auto m = materials.begin(); m != materials.end(); ++m)
+  {
+    MTL *new_m = new MTL;
+    new_m->illum_model = m->illum;
 
+    //load texture (if they exist)
+    //TODO: this assumes texture is an image, but .obj
+    //file supports procedural textures also
+    if(!m->ambient_texname.empty())
+      set_texture(m->ambient_texname, new_m->amb_tex);
+
+    if(!m->diffuse_texname.empty())
+      set_texture(m->diffuse_texname, new_m->diff_tex);
+
+    if(!m->specular_texname.empty())
+      set_texture(m->specular_texname, new_m->spec_tex);
+
+    if(!m->bump_texname.empty())
+      set_texture(m->bump_texname, new_m->bump_tex);
+
+    if(!m->displacement_texname.empty())
+      set_texture(m->displacement_texname, new_m->height_tex);
+
+    if(!m->alpha_texname.empty())
+      set_texture(m->alpha_texname, new_m->dissolve_tex);
+
+    this->materials.push_back( Material::ptr(new_m) );
+  }
+
+  ERROR("TODO: load_material_data()\n");
+}
+
+void MeshOBJ::set_texture(const std::string& path, int& target_id)
+{
+  ImageTexture *im = new ImageTexture(path);
+  this->textures.push_back( Texture::ptr(im) );
+  target_id = this->textures.size()-1;
 }

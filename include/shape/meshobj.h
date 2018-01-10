@@ -7,6 +7,10 @@
 
 class MeshOBJ : public Shape
 {
+private:
+  //loads texture and return its ID inside the textures vector
+  void set_texture(const std::string& path, int& target_id);
+
 public:
   std::vector<Triangle> tris;
 
@@ -16,6 +20,7 @@ public:
   void load_material_data(const std::vector<tinyobj::material_t>& materials);
 
   void generate_primitives(std::vector<Primitive>& target) const override;
+
   std::string str() const
   {
     std::string out("");

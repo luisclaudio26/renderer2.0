@@ -13,7 +13,8 @@ file(GLOB SOURCES "src/*.cpp"
                   "src/core/*.cpp"
                   "src/camera/*.cpp"
                   "src/util/*.cpp"
-                  "src/shape/*.cpp")
+                  "src/shape/*.cpp"
+                  "src/texture/*.cpp")
 
 #Link static libraries
 link_directories(3rdparty)

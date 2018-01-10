@@ -22,8 +22,8 @@ public:
   //.mtl files, for example, where many different materials are described),
   //we take target vectors
   static void load_from_json(const nlohmann::json& in,
-                              std::vector<Material>& target_mat,
-                              std::vector<Texture>& target_tex);
+                              std::vector<Material::ptr>& target_mat,
+                              std::vector<Texture::ptr>& target_tex);
 };
 
 #endif
