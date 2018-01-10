@@ -4,5 +4,6 @@
 #include <glm/glm.hpp>
 
 typedef glm::vec3 RGB;
+typedef glm::vec4 RGBA;
 
 #endif

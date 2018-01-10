@@ -45,7 +45,8 @@ void MeshOBJ::load_geometry_data(const std::vector<tinyobj::shape_t>& shapes,
   }
 }
 
-void MeshOBJ::load_material_data(const std::vector<tinyobj::material_t>& materials)
+void MeshOBJ::load_material_data(const std::string& basedir,
+                                 const std::vector<tinyobj::material_t>& materials)
 {
   //fill this->materials vector with data from material_t vector
   //Order must be the same, so the pointers in the triangles will be valid
@@ -61,22 +62,22 @@ void MeshOBJ::load_material_data(const std::vector<tinyobj::material_t>& materia
     //TODO: this assumes texture is an image, but .obj
     //file supports procedural textures also
     if(!m->ambient_texname.empty())
-      set_texture(m->ambient_texname, new_m->amb_tex);
+      set_texture(basedir + m->ambient_texname, new_m->amb_tex);
 
     if(!m->diffuse_texname.empty())
-      set_texture(m->diffuse_texname, new_m->diff_tex);
+      set_texture(basedir + m->diffuse_texname, new_m->diff_tex);
 
     if(!m->specular_texname.empty())
-      set_texture(m->specular_texname, new_m->spec_tex);
+      set_texture(basedir + m->specular_texname, new_m->spec_tex);
 
     if(!m->bump_texname.empty())
-      set_texture(m->bump_texname, new_m->bump_tex);
+      set_texture(basedir + m->bump_texname, new_m->bump_tex);
 
     if(!m->displacement_texname.empty())
-      set_texture(m->displacement_texname, new_m->height_tex);
+      set_texture(basedir + m->displacement_texname, new_m->height_tex);
 
     if(!m->alpha_texname.empty())
-      set_texture(m->alpha_texname, new_m->dissolve_tex);
+      set_texture(basedir + m->alpha_texname, new_m->dissolve_tex);
 
     this->materials.push_back( Material::ptr(new_m) );
   }

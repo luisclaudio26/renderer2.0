@@ -8,6 +8,8 @@ class Texture
 private:
 public:
   typedef std::shared_ptr<Texture> ptr;
+
+  virtual ~Texture() {}
 };
 
 #endif

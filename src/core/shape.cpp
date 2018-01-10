@@ -30,8 +30,10 @@ Shape::ptr Shape::load_from_json(const nlohmann::json& in)
     std::vector<tinyobj::shape_t> shapes;
 
     std::string path = param["path"].get<std::string>();
+    std::string basedir = basedir_from_path(path).c_str();
+
     tinyobj::LoadObj(&attrib, &shapes, &materials, &err,
-                      path.c_str(), basedir_from_path(path).c_str());
+                      path.c_str(), basedir.c_str());
     if(!err.empty()) ERROR( err.c_str() );
 
     //load .obj to internal format
@@ -43,7 +45,7 @@ Shape::ptr Shape::load_from_json(const nlohmann::json& in)
     //be properly loaded after
     if( mat["type"].get<std::string>().compare("materialMTL") == 0 )
     {
-      obj->load_material_data( materials );
+      obj->load_material_data( basedir, materials );
       obj->model2world = model2world;
 
       return Shape::ptr( obj );
