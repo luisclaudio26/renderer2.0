@@ -55,7 +55,10 @@ void MeshOBJ::load_geometry_data(const std::vector<tinyobj::shape_t>& shapes,
       }
 
       //load pointer to material. all shapes share the same materials!
-      face.material = s->mesh.material_ids[f_id];
+      //WARNING: this won't work unless .obj files with no associated .mtl
+      //file set all material IDs to zero!!! also, this is why we need
+      //to load materials before
+      face.material = this->materials[s->mesh.material_ids[f_id]];
 
       this->tris.push_back( face );
       attrib_offset += f;
@@ -109,11 +112,11 @@ void MeshOBJ::load_material_data(const std::string& basedir,
   }
 }
 
-void MeshOBJ::set_texture(const std::string& path, int& target_id)
+void MeshOBJ::set_texture(const std::string& path, Texture::ptr& target_id)
 {
   ImageTexture *im = new ImageTexture( fix_path(path) );
   this->textures.push_back( Texture::ptr(im) );
-  target_id = this->textures.size()-1;
+  target_id = this->textures.back();
 }
 
 std::string MeshOBJ::str() const

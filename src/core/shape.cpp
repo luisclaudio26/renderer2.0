@@ -23,6 +23,14 @@ Shape::ptr Shape::load_from_json(const nlohmann::json& in)
 
   Shape::ptr out;
 
+  //materials must be loaded FIRST, as primitives will need to reference them
+  //Both of these vectors will move-assigned after, so we won't do wasteful
+  //copies
+  std::vector<Material::ptr> materials_tmp;
+  std::vector<Texture::ptr> textures_tmp;
+  Material::load_from_json( in["material"], materials_tmp, textures_tmp );
+
+  //now load the actual shape
   if( type.compare("meshOBJ") == 0 )
   {
     tinyobj::attrib_t attrib; std::string err;
@@ -32,28 +40,30 @@ Shape::ptr Shape::load_from_json(const nlohmann::json& in)
     std::string path = param["path"].get<std::string>();
     std::string basedir = basedir_from_path(path).c_str();
 
+    //load data from .obj file. unfortunatelly
+    //this will force the materials to be reloaded, but
+    //that's not much of a problem
     tinyobj::LoadObj(&attrib, &shapes, &materials, &err,
                       path.c_str(), basedir.c_str());
     if(!err.empty()) ERROR( err.c_str() );
 
-    //load .obj to internal format
+    //transform tinyobj object into internal format
     MeshOBJ* obj = new MeshOBJ; //TODO: memory leak! check this
+
+    //we need materials before loading geometry
+    obj->textures = std::move(textures_tmp);
+    obj->materials = std::move(materials_tmp);
     obj->load_geometry_data( shapes, attrib );
 
-    //TODO: if material = materialMTL, load it here and than return
-    //shape. If not, skip this and do not return, so material will
-    //be properly loaded after
-    if( mat["type"].get<std::string>().compare("materialMTL") == 0 )
-    {
-      obj->load_material_data( basedir, materials );
-      obj->model2world = model2world;
+    //at this point we have nothing more to do and can return
+    obj->model2world = model2world;
 
-      return Shape::ptr( obj );
-    }
+    return Shape::ptr(obj);
   }
   else ERROR("only meshOBJ shapes are supported!")
 
   //common attributes
   out->model2world = model2world;
-  Material::load_from_json( in["material"], out->materials, out->textures );
+  out->textures = std::move(textures_tmp);
+  out->materials = std::move(materials_tmp);
 }

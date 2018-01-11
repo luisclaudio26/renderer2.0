@@ -3,13 +3,15 @@
 
 #include "../../3rdparty/tiny_obj_loader.h"
 #include "../core/shape.h"
+#include "../core/texture.h"
 #include "../primitive/triangle.h"
+
 
 class MeshOBJ : public Shape
 {
 private:
   //loads texture and return its ID inside the textures vector
-  void set_texture(const std::string& path, int& target_id);
+  void set_texture(const std::string& path, Texture::ptr& target_id);
 
 public:
   std::vector<Triangle> tris;

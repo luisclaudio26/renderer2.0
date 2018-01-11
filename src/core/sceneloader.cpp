@@ -32,26 +32,16 @@ void SceneLoader::generate_scene(Scene& target)
     printf("generated %d primitives\n", unpacked_prims[s_id-1].size());
   }
 
-  //pack textures
+  //pack textures and materials into a single vector
+  //this isn't really needed for the operations, but will
+  //help in managing
   int tex_offset = 0;
   for( auto s : shapes )
   {
-    std::vector<Texture>& texs = s.textures;
+    std::vector<Texture::ptr>& texs = s->textures;
 
     //TODO: this is really inefficient!
     for( auto t : texs ) target.textures.push_back(t);
-
-    //reindex texture pointers inside materials
-    for( auto m : s.materials )
-    {
-      if(m.amb_tex > 0) m.amb_tex += tex_offset;
-      if(m.diff_tex > 0) m.diff_tex += tex_offset;
-      if(m.spec_tex > 0) m.spec_tex += tex_offset;
-      if(m.bump_tex > 0) m.bump_tex += tex_offset;
-      if(m.height_tex > 0) m.height_tex += tex_offset;
-      if(m.dissolve_tex > 0) m.dissolve_tex += tex_offset;
-    }
-
-
   }
+
 }

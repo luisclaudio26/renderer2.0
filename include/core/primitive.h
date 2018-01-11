@@ -7,11 +7,10 @@
 
 class Primitive
 {
-private:
-  Material::ptr material;
-
 public:
   typedef std::shared_ptr<Primitive> ptr;
+
+  Material::ptr material;
 
   virtual void intersect(const Ray& ray, Isect& isect) const = 0;
 };

@@ -3,6 +3,7 @@
 
 #include "../core/material.h"
 #include "../core/spectrum.h"
+#include "../core/texture.h"
 #include <glm/gtx/string_cast.hpp>
 
 //Nothing special; this is just a material
@@ -17,15 +18,15 @@ public:
 
   //each component has an associated
   //texture ID, which is used to modulate it
-  RGB ambient; int amb_tex;
-  RGB diffuse; int diff_tex;
-  RGB specular; int spec_tex; float shininess;
+  RGB ambient; Texture::ptr amb_tex;
+  RGB diffuse; Texture::ptr diff_tex;
+  RGB specular; Texture::ptr spec_tex; float shininess;
   RGB transmittance; float ior; // index of refraction
 
-  int bump_tex, height_tex;
+  Texture::ptr bump_tex, height_tex;
 
   // 1 == opaque; 0 == fully transparent
-  float dissolve; int dissolve_tex;
+  float dissolve; Texture::ptr dissolve_tex;
 
 
   std::string str() const override

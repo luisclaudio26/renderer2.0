@@ -8,7 +8,6 @@ class Triangle : public Primitive
 {
 public:
   Vec3 v[3];
-  int material;
 
   Triangle operator*(const Mat4& T) const
   {
