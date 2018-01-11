@@ -28,6 +28,7 @@ ImageTexture::ImageTexture(const std::string& path)
 
   FIBITMAP* img_raw = FreeImage_Load(fmt, path.c_str(), 0);
   this->img = FreeImage_ConvertToRGBAF(img_raw);
+  FreeImage_Unload(img_raw);
 
   this->w = FreeImage_GetWidth(this->img);
   this->h = FreeImage_GetHeight(this->img);
