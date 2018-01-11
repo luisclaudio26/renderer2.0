@@ -26,7 +26,7 @@ public:
   Mat4 model2world;
 
   //this method won't erase any contents that TARGET may eventually have
-  virtual void generate_primitives(std::vector<Primitive>& target) const = 0;
+  virtual void generate_primitives(std::vector<Primitive::ptr>& target) const = 0;
 
   static Shape::ptr load_from_json(const nlohmann::json& in);
   virtual std::string str() const = 0;

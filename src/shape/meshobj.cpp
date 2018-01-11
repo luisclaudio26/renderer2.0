@@ -8,17 +8,22 @@ static std::string fix_path(const std::string& path)
 {
   std::string out;
   for(int i = 0; i < path.length(); ++i)
-    if(path[i] == '\\') out += '/';
-    else out += path[i];
+    out += (path[i] == '\\') ? '/' : path[i];
   return out;
 }
 
 //----------------------------------
 //--------- FROM MESHOBJ.H ---------
 //----------------------------------
-void MeshOBJ::generate_primitives(std::vector<Primitive>& target) const
+void MeshOBJ::generate_primitives(std::vector<Primitive::ptr>& target) const
 {
-
+  //store triangles in world space
+  for(auto t : tris)
+  {
+    Triangle *tri_ws = new Triangle;
+    *tri_ws = (*tri_ws) * model2world;
+    target.push_back( Primitive::ptr(tri_ws) );
+  }
 }
 
 void MeshOBJ::load_geometry_data(const std::vector<tinyobj::shape_t>& shapes,
@@ -102,8 +107,6 @@ void MeshOBJ::load_material_data(const std::string& basedir,
 
     this->materials.push_back( Material::ptr(new_m) );
   }
-
-  ERROR("TODO: load_material_data()\n");
 }
 
 void MeshOBJ::set_texture(const std::string& path, int& target_id)

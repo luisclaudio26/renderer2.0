@@ -26,6 +26,10 @@ public:
                               std::vector<Material::ptr>& target_mat,
                               std::vector<Texture::ptr>& target_tex);
 
+  //packing textures into a single vector requires
+  //texture indices inside material to be reorganized
+  virtual void reindex_textures(int offset) = 0;
+
   virtual std::string str() const = 0;
 };
 

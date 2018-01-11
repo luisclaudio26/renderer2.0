@@ -20,7 +20,7 @@ public:
   void load_material_data(const std::string& basedir,
                           const std::vector<tinyobj::material_t>& materials);
 
-  void generate_primitives(std::vector<Primitive>& target) const override;
+  void generate_primitives(std::vector<Primitive::ptr>& target) const override;
 
   std::string str() const override;
 };
