@@ -21,6 +21,15 @@ bool SceneLoader::load_scene_from_json(const nlohmann::json& in)
 
 void SceneLoader::generate_scene(Scene& target)
 {
+  //TODO: after fixing everything converning material/texture
+  //loading, this method will become way more simple; we'll
+  //simply loop over all the shapes and copy the pointers to
+  //a single vector. In the end, materials/textures will be
+  //pointer by pointers inside the primitives AND inside the
+  //vectors. We need this to correctly deallocate the resources
+  //(or maybe not, as shared_ptr's will do this automatically)
+  //and maybe apply some operation to all materials/textures
+  //at once
   std::vector<std::vector<Primitive::ptr>> unpacked_prims;
   unpacked_prims.resize(shapes.size());
 

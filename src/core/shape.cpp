@@ -5,7 +5,7 @@
 #include "../../3rdparty/tiny_obj_loader.h"
 #include <string>
 
-std::string basedir_from_path(const std::string& path)
+static std::string basedir_from_path(const std::string& path)
 {
   std::size_t found = path.find_last_of('/');
   return path.substr(0, found+1);
@@ -66,4 +66,6 @@ Shape::ptr Shape::load_from_json(const nlohmann::json& in)
   out->model2world = model2world;
   out->textures = std::move(textures_tmp);
   out->materials = std::move(materials_tmp);
+
+  return out;
 }
