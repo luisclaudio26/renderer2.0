@@ -14,22 +14,18 @@ int main(int argc, char** args)
   nlohmann::json j; in >> j;
 
   //load data
-  SceneLoader *loader = new SceneLoader;
-  loader->load_scene_from_json( j );
+  SceneLoader loader;
+  loader.load_scene_from_json( j );
 
   Integrator::ptr integrator = Integrator::load_from_json( j );
 
   //preprocess scene
-  Scene *scene = new Scene;
-  loader->generate_scene(*scene);
+  Scene scene;
+  loader.generate_scene(scene);
 
   //hora do show
-  integrator->render(*scene);
+  integrator->render(scene);
 
-  //clean up
-  delete loader;
-  delete scene;
-  
   FreeImage_DeInitialise();
 
   return 0;
