@@ -15,9 +15,10 @@ void Integrator::render_patch(ImageTools::RGBuchar* img, const Scene& scene,
     for(int j = col; j < col+width; ++j)
     {
       float half_vRes = vRes*0.5f, half_hRes = hRes*0.5f;
-      float u = (half_vRes - i)/ half_vRes;
-      float v = (j - half_hRes)/ half_hRes;
 
+      float u = (j - half_hRes)/ half_hRes;
+      float v = (half_vRes - i)/ half_vRes;
+      
       RGB sample = integrate(Vec2(u,v), scene);
       img[i*hRes+j] = ImageTools::rgb_float_to_uchar(sample);
     }
