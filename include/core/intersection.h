@@ -12,6 +12,8 @@ public:
   Material::ptr mat;
   Vec3 normal;
   Vec2 uv; //UV coordinates of the intersection point
+
+  bool is_valid() const { return t > 0; }
 };
 
 #endif

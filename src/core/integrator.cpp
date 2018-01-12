@@ -4,7 +4,7 @@
 
 void Integrator::render(const Scene& scene)
 {
-  int hRes = 320, vRes = 240;
+  int hRes = 32, vRes = 24;
   ImageTools::RGBuchar *img = new ImageTools::RGBuchar[hRes*vRes];
 
   for(int i = 0; i < vRes; ++i)
