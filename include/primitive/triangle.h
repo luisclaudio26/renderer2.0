@@ -9,12 +9,10 @@ class Triangle : public Primitive
 public:
   Vec3 v[3];
 
-  Triangle operator*(const Mat4& T) const
+  void transform(const Mat4& T)
   {
-    Triangle out;
     for(int i = 0; i < 3; ++i)
-      out.v[i] = T * Vec4(v[i], 1.0f);
-    return out;
+      v[i] = T * Vec4(v[i], 1.0f);
   }
 
   void intersect(const Ray& ray, Isect& isect) const override {}

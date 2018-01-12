@@ -18,6 +18,8 @@ public:
   //collection of BRDF/BTDF (BSDF)
   //textures modulating the BSDF
 
+  virtual bool is_emissive() const = 0;
+
   //load material data from JSON file into material/texture vectors.
   //in case we need more than one material to be loaded (in the case of
   //.mtl files, for example, where many different materials are described),

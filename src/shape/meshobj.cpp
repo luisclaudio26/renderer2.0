@@ -2,6 +2,7 @@
 #include "../../include/material/mtl.h"
 #include "../../include/texture/imagetexture.h"
 #include "../../include/util/log.h"
+#include <cstdio>
 
 //----------------------------------
 //--------- FROM MESHOBJ.H ---------
@@ -11,9 +12,9 @@ void MeshOBJ::generate_primitives(std::vector<Primitive::ptr>& target) const
   //store triangles in world space
   for(auto t : tris)
   {
-    Triangle *tri_ws = new Triangle;
-    *tri_ws = (*tri_ws) * model2world;
-    target.push_back( Primitive::ptr(tri_ws) );
+    Triangle *t_ws = new Triangle(t);
+    t_ws->transform(this->model2world);
+    target.push_back( Primitive::ptr(t_ws) );
   }
 }
 
@@ -49,6 +50,9 @@ void MeshOBJ::load_geometry_data(const std::vector<tinyobj::shape_t>& shapes,
       //WARNING: this won't work unless .obj files with no associated .mtl
       //file set all material IDs to zero!!! also, this is why we need
       //to load materials before
+      int m_id = s->mesh.material_ids[f_id];
+      if(m_id < 0 || m_id > this->materials.size()) printf("m_id = %d\n", m_id);
+
       face.material = this->materials[s->mesh.material_ids[f_id]];
 
       this->tris.push_back( face );

@@ -26,12 +26,15 @@ public:
   std::vector<Material::ptr> materials;
   std::vector<Texture::ptr> textures;
 
+  std::vector<Primitive::ptr> emissive;
+
   Camera::ptr cam;
   Background::ptr bgd;
 
   //TODO: kdtree
 
   bool intersect(const Ray& r, Isect& target) const;
+  void preprocess();
 };
 
 #endif

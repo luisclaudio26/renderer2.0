@@ -22,6 +22,7 @@ int main(int argc, char** args)
   //preprocess scene
   Scene scene;
   loader.generate_scene(scene);
+  scene.preprocess();
 
   //hora do show
   integrator->render(scene);

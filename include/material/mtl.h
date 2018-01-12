@@ -29,6 +29,11 @@ public:
   float dissolve; Texture::ptr dissolve_tex;
 
 
+  bool is_emissive() const override
+  {
+    return emission.r > 0 || emission.g > 0 || emission.b > 0;
+  }
+
   std::string str() const override
   {
     std::string out("");
