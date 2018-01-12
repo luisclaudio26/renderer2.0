@@ -31,7 +31,7 @@ public:
 
   //TODO: kdtree
 
-  bool intersect(const Ray& r, Isect& target);
+  bool intersect(const Ray& r, Isect& target) const;
 };
 
 #endif
