@@ -22,4 +22,4 @@ file(GLOB SOURCES "src/*.cpp"
 link_directories(3rdparty)
 
 add_executable(raytracer ${SOURCES})
-target_link_libraries(raytracer tinyobjloader freeimage m)
+target_link_libraries(raytracer tinyobjloader freeimage m pthread)
