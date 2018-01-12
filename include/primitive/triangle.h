@@ -15,7 +15,7 @@ public:
       v[i] = T * Vec4(v[i], 1.0f);
   }
 
-  void intersect(const Ray& ray, Isect& isect) const override {}
+  void intersect(const Ray& ray, Isect& isect) const override;
 };
 
 #endif

@@ -9,7 +9,7 @@ class Isect
 {
 public:
   float t;
-  Material::ptr mat;
+  Material::ptr material;
   Vec3 normal;
   Vec2 uv; //UV coordinates of the intersection point
 

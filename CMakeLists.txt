@@ -15,7 +15,8 @@ file(GLOB SOURCES "src/*.cpp"
                   "src/util/*.cpp"
                   "src/shape/*.cpp"
                   "src/texture/*.cpp"
-                  "src/integrator/*.cpp")
+                  "src/integrator/*.cpp"
+                  "src/primitive/*.cpp")
 
 #Link static libraries
 link_directories(3rdparty)
