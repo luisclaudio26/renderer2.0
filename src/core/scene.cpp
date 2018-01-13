@@ -26,4 +26,7 @@ void Scene::preprocess()
   //store emissive primitives
   for(auto p : prims)
     if(p->material->is_emissive()) emissive.push_back(p);
+
+  //build kdtree
+  tree.build(prims);
 }

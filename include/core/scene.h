@@ -8,9 +8,13 @@
 #include "intersection.h"
 #include "camera.h"
 #include "background.h"
+#include "../kdtree/kdtree.h"
 
 class Scene
 {
+private:
+
+
 public:
   //it will be EXTREMElY inefficient to store
   //vectors of pointers, as the objects will be
@@ -31,7 +35,7 @@ public:
   Camera::ptr cam;
   Background::ptr bgd;
 
-  //TODO: kdtree
+  KdTree tree;
 
   bool intersect(const Ray& r, Isect& target) const;
   void preprocess();
