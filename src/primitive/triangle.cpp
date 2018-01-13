@@ -31,3 +31,12 @@ void Triangle::intersect(const Ray& ray, Isect& isect) const
   isect.normal = glm::normalize(glm::cross(v0v1, v0v2));
   isect.material = this->material;
 }
+
+void Triangle::aabb(AABB& target) const
+{
+  for(int i = 0; i < 3; ++i)
+  {
+    target.max[i] = std::fmax(v[0][i], std::fmax(v[1][i], v[2][i]));
+    target.min[i] = std::fmin(v[0][i], std::fmin(v[1][i], v[2][i]));
+  }
+}

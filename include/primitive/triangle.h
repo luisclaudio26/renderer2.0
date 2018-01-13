@@ -16,6 +16,7 @@ public:
   }
 
   void intersect(const Ray& ray, Isect& isect) const override;
+  void aabb(AABB& target) const override;
 };
 
 #endif

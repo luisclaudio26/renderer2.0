@@ -13,6 +13,7 @@ public:
   Material::ptr material;
 
   virtual void intersect(const Ray& ray, Isect& isect) const = 0;
+  virtual void aabb(AABB& target) const = 0;
 };
 
 #endif
