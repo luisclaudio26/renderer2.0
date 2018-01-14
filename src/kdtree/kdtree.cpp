@@ -44,9 +44,77 @@ static void compute_aabb(const std::vector<Primitive::ptr>& prims,
 //-----------------------------------
 //---------- FROM KDTREE.H ----------
 //-----------------------------------
-bool KdTree::intersect(const Ray& r, Isect& isect) const
+bool KdNode::intersect(const Ray& r, const std::vector<Primitive::ptr>& prims,
+                        Isect& target) const
 {
+  if( is_leaf() )
+  {
+    bool hit = false;
+    for(auto id : prims_ids)
+    {
+      Primitive::ptr p = prims[id];
+      Isect p_isect; p->intersect(r, p_isect);
 
+      if( p_isect.is_valid() && p_isect.t < target.t)
+      {
+        target = p_isect;
+        hit = true;
+      }
+    }
+    return hit;
+  }
+
+  //not a leaf
+  float tmin, tmax;
+  if(!aabb.intersect(r, tmin, tmax)) return false;
+
+  //TODO: problems when ray is parallel to the split.
+  //in these cases, ray won't cross the split plane
+  //OR will cross it in infinitely mane points
+  //First case, it will cross only one box; second case,
+  //we need to decide which box it intersected in a consistent
+  //manner
+  float tsplit = (this->split - r.o[this->axis])/r.d[this->axis];
+
+  //define NEAR and FAR boxes.
+  //this is defined by checking at which side of the
+  //splitting plane the origin is. If the ray is exactly
+  //on the origin, the direction defines which plane is
+  //near
+  KdNode *near, *far;
+  if( r.o[this->axis] < this->split ||
+      (r.o[this->axis] == this->split && r.d[this->axis] < 0) )
+  {
+    near = this->left;
+    far = this->right;
+  }
+  else
+  {
+    near = this->right;
+    far = this->left;
+  }
+
+  //decide whether we must traverse NEAR only, FAR only or both
+  //bool both = tmin < tsplit && tsplit < tmax
+  bool near_only = tsplit >= tmax || tsplit < 0;
+  bool far_only = tsplit <= tmin;
+
+  if( near_only ) return near->intersect(r, prims, target);
+  else if( far_only ) return far->intersect(r, prims, target);
+  else
+  {
+    //if we found an intersection in the near
+    //box, stop looking
+    if( near->intersect(r, prims, target) ) return true;
+    else return far->intersect(r, prims, target);
+  }
+}
+
+bool KdTree::intersect(const Ray& r, const std::vector<Primitive::ptr>& prims,
+                        Isect& isect) const
+{
+  isect.t = FLT_MAX;
+  return root.intersect(r, prims, isect);
 }
 
 bool KdNode::is_leaf() const
@@ -65,9 +133,7 @@ float KdNode::split_at(const std::vector<Primitive::ptr>& prims,
       longest = i;
   axis = longest;
 
-  //TODO: this is not a good heuristic for primitive splitting
-  //return (aabb.max[longest]+aabb.min[longest])*0.5f;
-
+  //split at median
   std::vector<float> edges;
   for(auto id : prims_ids)
   {
@@ -88,18 +154,16 @@ KdNode::KdNode(const std::vector<Primitive::ptr>& prims,
   if(prims_ids.size() < MAX_PRIM)
   {
     this->left = this->right = NULL;
-    this->prims = std::move( prims_ids );
+    this->prims_ids = std::move( prims_ids );
     this->aabb = aabb;
+    this->axis = -1;
+    this->split = -1.0f;
   }
   else
   {
     //choose splitting point
     float split; int axis;
     split = split_at(prims, prims_ids, aabb, axis);
-
-    printf("AABB: %s, %s\n", glm::to_string(aabb.min).c_str(),
-                              glm::to_string(aabb.max).c_str());
-    printf("Axis %d, split at %f\n", split, axis);
 
     //classify primitives into left/right
     std::vector<int> left, right;
@@ -115,21 +179,23 @@ KdNode::KdNode(const std::vector<Primitive::ptr>& prims,
     //count the number of primitives shared in left and right
     //vectors. If they share more than x% of the primitives,
     //give up and build leaf node
+    //TODO: use Surface Area Heuristic!
     int overlap = left.size()+right.size()-prims_ids.size();
     float shared_left = (float)std::abs(overlap)/left.size();
     float shared_right = (float)std::abs(overlap)/right.size();
-    printf("%f%% and %f\%% of shared primitives\n", shared_left*100, shared_right*100);
 
     if(shared_left < 0.5f && shared_right < 0.5f)
     {
-      printf("N left: %d, N right: %d\n--------------------------\n", left.size(), right.size());
-
       //compute new bounding boxes
       AABB left_aabb = aabb;
       left_aabb.max[axis] = split;
 
       AABB right_aabb = aabb;
       right_aabb.min[axis] = split;
+
+      this->split = split;
+      this->axis = axis;
+      this->aabb = aabb;
 
       //recursively build children
       this->left = new KdNode(prims, left, left_aabb);
@@ -138,8 +204,10 @@ KdNode::KdNode(const std::vector<Primitive::ptr>& prims,
     else
     {
       this->left = this->right = NULL;
-      this->prims = std::move( prims_ids );
+      this->prims_ids = std::move( prims_ids );
       this->aabb = aabb;
+      this->axis = -1;
+      this->split = -1.0f;
     }
   }
 
@@ -153,9 +221,5 @@ void KdTree::build(const std::vector<Primitive::ptr>& prims)
   for(int i = 0; i < prims.size(); ++i) prims_ids.push_back(i);
 
   AABB aabb; compute_aabb(prims, prims_ids, aabb);
-
-  printf("AABB %s, %s\n", glm::to_string(aabb.min).c_str(),
-                          glm::to_string(aabb.max).c_str());
-
   root = KdNode(prims, prims_ids, aabb);
 }

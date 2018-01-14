@@ -44,7 +44,7 @@ class AABB
 public:
   Vec3 min, max;
 
-  bool intersect(const Ray& r, float& tmin, float& tmax);
+  bool intersect(const Ray& r, float& tmin, float& tmax) const;
 };
 
 #endif

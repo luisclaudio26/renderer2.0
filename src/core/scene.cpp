@@ -4,22 +4,7 @@
 
 bool Scene::intersect(const Ray& r, Isect& target) const
 {
-  //TODO: kd-trees <3 <3 !!!
-  target.t = FLT_MAX;
-
-  for(auto p : prims)
-  {
-    Isect inter; p->intersect(r, inter);
-
-    if(inter.is_valid() && inter.t < target.t)
-      target = inter;
-
-  }
-
-  //invalidate isect if we intersected no primitive
-  if(target.t == FLT_MAX) target.t = -1.0f;
-
-  return target.is_valid();
+  return tree.intersect(r, prims, target);
 }
 
 void Scene::preprocess()

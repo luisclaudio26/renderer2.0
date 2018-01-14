@@ -18,7 +18,7 @@ void Integrator::render_patch(ImageTools::RGBuchar* img, const Scene& scene,
 
       float u = (j - half_hRes)/ half_hRes;
       float v = (half_vRes - i)/ half_vRes;
-      
+
       RGB sample = integrate(Vec2(u,v), scene);
       img[i*hRes+j] = ImageTools::rgb_float_to_uchar(sample);
     }
@@ -26,7 +26,7 @@ void Integrator::render_patch(ImageTools::RGBuchar* img, const Scene& scene,
 
 void Integrator::render(const Scene& scene)
 {
-  int hRes = 160, vRes = 120;
+  int hRes = 640, vRes = 480;
   ImageTools::RGBuchar *img = new ImageTools::RGBuchar[hRes*vRes];
 
   //TODO: general code for spawning threads:

@@ -1,7 +1,7 @@
 #include "../../include/core/geometry.h"
 #include <cfloat>
 
-bool AABB::intersect(const Ray& r, float& tmin, float& tmax)
+bool AABB::intersect(const Ray& r, float& tmin, float& tmax) const
 {
   #define EPS 0.00001f
 
