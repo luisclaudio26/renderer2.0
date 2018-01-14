@@ -14,12 +14,14 @@ public:
   //data. split this (union? inheritance?)
   std::vector<int> prims;
 
-  float split_at(const std::vector<Primitive::ptr>& prims,
-                          const std::vector<int>& prims_ids, int& axis);
-
   KdNode() : left(NULL), right(NULL) {}
   KdNode(const std::vector<Primitive::ptr>& prims,
           const std::vector<int>& prims_ids, const AABB& aabb);
+
+  float split_at(const std::vector<Primitive::ptr>& prims,
+                  const std::vector<int>& prims_ids, const AABB& aabb,
+                  int& axis);
+  bool is_leaf() const;
 };
 
 class KdTree
@@ -29,6 +31,7 @@ private:
 
 public:
   void build(const std::vector<Primitive::ptr>& prims);
+  bool intersect(const Ray& r, Isect& isect) const;
 };
 
 #endif
