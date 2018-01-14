@@ -8,6 +8,7 @@ class Triangle : public Primitive
 {
 public:
   Vec3 v[3];
+  Vec2 uv[3];
 
   void transform(const Mat4& T)
   {

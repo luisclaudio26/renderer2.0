@@ -9,6 +9,7 @@ RGB Pathtracer::integrate(const Vec2& uv, const Scene& scene) const
   if( !scene.intersect(r, isect) )
     return scene.bgd->sample(r);
 
-  //if we any intersection, return normal
-  return (isect.normal+RGB(1.0f))*0.5f;
+  Vec3 dummy(0.0f);
+  RGB tex = isect.material->sample(dummy, dummy, dummy, isect.uv);
+  return tex;
 }

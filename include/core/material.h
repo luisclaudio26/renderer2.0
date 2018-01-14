@@ -5,6 +5,8 @@
 #include <string>
 #include "../../3rdparty/json.hpp"
 #include "texture.h"
+#include "spectrum.h"
+#include "geometry.h"
 
 //TODO: gpurenderer's materials are represented as a union
 //here we're gonna use polymorphism, so one of the materials
@@ -19,6 +21,8 @@ public:
   //textures modulating the BSDF
 
   virtual bool is_emissive() const = 0;
+  virtual RGB sample(const Vec3& wi, const Vec3& wo,
+                      const Vec3& normal, const Vec2& uv) const = 0;
 
   //load material data from JSON file into material/texture vectors.
   //in case we need more than one material to be loaded (in the case of

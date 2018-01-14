@@ -20,6 +20,9 @@ private:
 public:
   ImageTexture(const std::string& path);
   ~ImageTexture() override;
+
+  RGB sample(const Vec2& uv) const override;
+
   std::string str() const override
   {
       std::string out("");

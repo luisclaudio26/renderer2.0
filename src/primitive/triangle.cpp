@@ -30,6 +30,7 @@ void Triangle::intersect(const Ray& ray, Isect& isect) const
   isect.t = glm::dot(v0v2, qvec) * invDet;
   isect.normal = glm::normalize(glm::cross(v0v1, v0v2));
   isect.material = this->material;
+  isect.uv = u*uv[0] + v*uv[1] + (1-u-v)*uv[2];
 }
 
 void Triangle::aabb(AABB& target) const

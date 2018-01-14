@@ -43,7 +43,11 @@ void MeshOBJ::load_geometry_data(const std::vector<tinyobj::shape_t>& shapes,
         float vy = attrib.vertices[3*v.vertex_index + 1];
         float vz = attrib.vertices[3*v.vertex_index + 2];
 
+        float vu = attrib.texcoords[2*v.vertex_index + 0];
+        float vv = attrib.texcoords[2*v.vertex_index + 1];
+
         face.v[v_id] = Vec3( vx, vy, vz );
+        face.uv[v_id] = Vec2( vu, vv );
       }
 
       //load pointer to material. all shapes share the same materials!

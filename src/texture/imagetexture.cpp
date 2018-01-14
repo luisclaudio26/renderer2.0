@@ -14,6 +14,14 @@ static FREE_IMAGE_FORMAT fif_from_str(const std::string& ext)
 //--------------------------------------
 //-------- FROM IMAGETEXTURE.H ---------
 //--------------------------------------
+RGB ImageTexture::sample(const Vec2& uv) const
+{
+  int i = (uv.x == 1.0f) ? h-1 : uv.x*h;
+  int j = (uv.y == 1.0f) ? w-1 : uv.y*w;
+
+  return RGB(data[i*w+j]);
+}
+
 ImageTexture::ImageTexture(const std::string& path)
 {
   this->w = this->h = -1;

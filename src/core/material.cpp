@@ -61,36 +61,42 @@ void Material::load_from_json(const nlohmann::json& in,
       if(!m->ambient_texname.empty())
       {
         Texture::ptr im_amb(new ImageTexture(basedir+fix_path(m->ambient_texname)));
+        new_m->amb_tex = im_amb;
         target_tex.push_back(im_amb);
       }
 
       if(!m->diffuse_texname.empty())
       {
         Texture::ptr im_diff(new ImageTexture(basedir+fix_path(m->diffuse_texname)));
+        new_m->diff_tex = im_diff;
         target_tex.push_back(im_diff);
       }
 
       if(!m->specular_texname.empty())
       {
         Texture::ptr im_spec(new ImageTexture(basedir+fix_path(m->specular_texname)));
+        new_m->spec_tex = im_spec;
         target_tex.push_back(im_spec);
       }
 
       if(!m->bump_texname.empty())
       {
         Texture::ptr im_bump(new ImageTexture(basedir+fix_path(m->bump_texname)));
+        new_m->bump_tex = im_bump;
         target_tex.push_back(im_bump);
       }
 
       if(!m->displacement_texname.empty())
       {
         Texture::ptr im_disp(new ImageTexture(basedir+fix_path(m->displacement_texname)));
+        new_m->height_tex = im_disp;
         target_tex.push_back(im_disp);
       }
 
       if(!m->alpha_texname.empty())
       {
         Texture::ptr im_alpha(new ImageTexture(basedir+fix_path(m->alpha_texname)));
+        new_m->dissolve_tex = im_alpha;
         target_tex.push_back(im_alpha);
       }
 

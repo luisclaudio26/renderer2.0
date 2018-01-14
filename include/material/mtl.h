@@ -28,6 +28,8 @@ public:
   // 1 == opaque; 0 == fully transparent
   float dissolve; Texture::ptr dissolve_tex;
 
+  RGB sample(const Vec3& wi, const Vec3& wo,
+              const Vec3& normal, const Vec2& uv) const override;
 
   bool is_emissive() const override
   {
