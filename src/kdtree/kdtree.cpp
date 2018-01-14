@@ -133,8 +133,9 @@ bool KdNode::is_leaf() const
 }
 
 float KdNode::split_at(const std::vector<Primitive::ptr>& prims,
-                        const std::vector<int>& prims_ids, const AABB& aabb,
-                        int& axis)
+                        const std::vector<AABB>& aabbs,
+                        const std::vector<int>& prims_ids,
+                        const AABB& aabb, int& axis)
 {
   //get longest axis
   int longest = 0;
@@ -147,7 +148,7 @@ float KdNode::split_at(const std::vector<Primitive::ptr>& prims,
   std::vector<float> edges;
   for(auto id : prims_ids)
   {
-    AABB p_aabb; prims[id]->aabb(p_aabb);
+    AABB p_aabb = aabbs[id];
     edges.push_back(p_aabb.min[longest]);
     edges.push_back(p_aabb.max[longest]);
   }
@@ -158,6 +159,7 @@ float KdNode::split_at(const std::vector<Primitive::ptr>& prims,
 }
 
 KdNode::KdNode(const std::vector<Primitive::ptr>& prims,
+                const std::vector<AABB>& aabbs,
                 const std::vector<int>& prims_ids, const AABB& aabb)
 {
   //stop criterion
@@ -173,14 +175,13 @@ KdNode::KdNode(const std::vector<Primitive::ptr>& prims,
   {
     //choose splitting point
     float split; int axis;
-    split = split_at(prims, prims_ids, aabb, axis);
+    split = split_at(prims, aabbs, prims_ids, aabb, axis);
 
     //classify primitives into left/right
     std::vector<int> left, right;
     for(auto id : prims_ids)
     {
-      //TODO: precompute bounding boxes
-      AABB p_aabb; prims[id]->aabb(p_aabb);
+      AABB p_aabb = aabbs[id];
 
       if(p_aabb.min[axis] < split) left.push_back( id );
       if(p_aabb.max[axis] > split) right.push_back( id );
@@ -208,8 +209,8 @@ KdNode::KdNode(const std::vector<Primitive::ptr>& prims,
       this->aabb = aabb;
 
       //recursively build children
-      this->left = new KdNode(prims, left, left_aabb);
-      this->right = new KdNode(prims, right, right_aabb);
+      this->left = new KdNode(prims, aabbs, left, left_aabb);
+      this->right = new KdNode(prims, aabbs, right, right_aabb);
     }
     else
     {
@@ -230,6 +231,11 @@ void KdTree::build(const std::vector<Primitive::ptr>& prims)
   std::vector<int> prims_ids;
   for(int i = 0; i < prims.size(); ++i) prims_ids.push_back(i);
 
+  //precompute bounding boxes
+  std::vector<AABB> aabbs; aabbs.reserve(prims.size());
+  for(int i = 0; i < prims.size(); ++i)
+    prims[i]->aabb(aabbs[i]);
+
   AABB aabb; compute_aabb(prims, prims_ids, aabb);
-  root = KdNode(prims, prims_ids, aabb);
+  root = KdNode(prims, aabbs, prims_ids, aabb);
 }

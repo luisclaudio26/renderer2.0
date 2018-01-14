@@ -17,11 +17,13 @@ public:
 
   KdNode() : left(NULL), right(NULL) {}
   KdNode(const std::vector<Primitive::ptr>& prims,
+          const std::vector<AABB>& aabbs,
           const std::vector<int>& prims_ids, const AABB& aabb);
 
   float split_at(const std::vector<Primitive::ptr>& prims,
-                  const std::vector<int>& prims_ids, const AABB& aabb,
-                  int& axis);
+                  const std::vector<AABB>& aabbs,
+                  const std::vector<int>& prims_ids,
+                  const AABB& aabb, int& axis);
   bool is_leaf() const;
   bool intersect(const Ray& r, const std::vector<Primitive::ptr>& prims,
                   Isect& target) const;
