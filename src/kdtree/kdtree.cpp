@@ -45,7 +45,7 @@ static void compute_aabb(const std::vector<Primitive::ptr>& prims,
 //---------- FROM KDTREE.H ----------
 //-----------------------------------
 bool KdNode::intersect(const Ray& r, const std::vector<Primitive::ptr>& prims,
-                        Isect& target) const
+                        float tmin, float tmax, Isect& target) const
 {
   if( is_leaf() )
   {
@@ -65,9 +65,6 @@ bool KdNode::intersect(const Ray& r, const std::vector<Primitive::ptr>& prims,
   }
 
   //not a leaf
-  float tmin, tmax;
-  if(!aabb.intersect(r, tmin, tmax)) return false;
-
   //if ray is parallel to the splitting plane, there's no problem:
   //tsplit will be +INF, so it will be >= tmax (and won't be <= tmin),
   //thus we'll explore the NEAR box only, which is correct.
@@ -109,14 +106,14 @@ bool KdNode::intersect(const Ray& r, const std::vector<Primitive::ptr>& prims,
   bool near_only = tsplit >= tmax || tsplit <= 0;
   bool far_only = tsplit <= tmin;
 
-  if( near_only ) return near->intersect(r, prims, target);
-  else if( far_only ) return far->intersect(r, prims, target);
+  if( near_only ) return near->intersect(r, prims, tmin, tmax, target);
+  else if( far_only ) return far->intersect(r, prims, tmin, tmax, target);
   else
   {
     //if we found an intersection in the near
     //box, stop looking
-    if( near->intersect(r, prims, target) ) return true;
-    else return far->intersect(r, prims, target);
+    if( near->intersect(r, prims,tmin, tsplit,  target) ) return true;
+    else return far->intersect(r, prims, tsplit, tmax, target);
   }
 }
 
@@ -124,7 +121,11 @@ bool KdTree::intersect(const Ray& r, const std::vector<Primitive::ptr>& prims,
                         Isect& isect) const
 {
   isect.t = FLT_MAX;
-  return root.intersect(r, prims, isect);
+
+  float tmin, tmax;
+  if( root.aabb.intersect(r, tmin, tmax) )
+    return root.intersect(r, prims, tmin, tmax, isect);
+  else return false; //we missed the biggest box; stop!
 }
 
 bool KdNode::is_leaf() const

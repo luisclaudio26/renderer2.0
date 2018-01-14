@@ -26,7 +26,7 @@ public:
                   const AABB& aabb, int& axis);
   bool is_leaf() const;
   bool intersect(const Ray& r, const std::vector<Primitive::ptr>& prims,
-                  Isect& target) const;
+                  float tmin, float tmax, Isect& target) const;
 };
 
 class KdTree
