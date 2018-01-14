@@ -12,4 +12,8 @@ RGB Pathtracer::integrate(const Vec2& uv, const Scene& scene) const
   Vec3 dummy(0.0f);
   RGB tex = isect.material->sample(dummy, dummy, dummy, isect.uv);
   return tex;
+  
+  /*
+  Vec3 tex(isect.uv[0], isect.uv[1], .0f);
+  return tex;*/
 }
