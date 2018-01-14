@@ -68,22 +68,21 @@ bool KdNode::intersect(const Ray& r, const std::vector<Primitive::ptr>& prims,
   float tmin, tmax;
   if(!aabb.intersect(r, tmin, tmax)) return false;
 
-  //TODO: problems when ray is parallel to the split.
-  //in these cases, ray won't cross the split plane
-  //OR will cross it in infinitely mane points
-  //First case, it will cross only one box; second case,
-  //we need to decide which box it intersected in a consistent
-  //manner
-  float tsplit = (this->split - r.o[this->axis])/r.d[this->axis];
+  //if ray is parallel to the splitting plane, there's no problem:
+  //tsplit will be +INF, so it will be >= tmax (and won't be <= tmin),
+  //thus we'll explore the NEAR box only, which is correct.
+  //Problems may occur if the ray's origin is exactly on the splitting
+  //plane, in which case we simply shift it a bit to the right.
+  float split = this->split; if(split == r.o[this->axis]) split += 0.000001f;
+  float tsplit = (split - r.o[this->axis])/r.d[this->axis];
 
   //define NEAR and FAR boxes.
   //this is defined by checking at which side of the
   //splitting plane the origin is. If the ray is exactly
-  //on the origin, the direction defines which plane is
-  //near
+  //on the origin, the direction defines which plane is near
   KdNode *near, *far;
-  if( r.o[this->axis] < this->split ||
-      (r.o[this->axis] == this->split && r.d[this->axis] < 0) )
+  if( r.o[this->axis] < split ||
+      (r.o[this->axis] == split && r.d[this->axis] < 0) )
   {
     near = this->left;
     far = this->right;
@@ -95,8 +94,19 @@ bool KdNode::intersect(const Ray& r, const std::vector<Primitive::ptr>& prims,
   }
 
   //decide whether we must traverse NEAR only, FAR only or both
-  //bool both = tmin < tsplit && tsplit < tmax
-  bool near_only = tsplit >= tmax || tsplit < 0;
+  //The case where both boxes should be visited (tmin < tsplit
+  //&& tsplit < tmax) is equivalent to !near_only and !far_only.
+  //Technically we should require that tsplit > 0 for far_only
+  //to be true, but adding this clause won't change anything.
+  //
+  //Border cases, where tmin = tmax, are correctly also correctly
+  //covered by this logic
+  //
+  //There's a subtlety here: everytime tsplit < 0, both near_only
+  //and far_only are TRUE. However, as near_only is the first condition
+  //tested, it returns true and we test only the nearest box, which is
+  //CORRECT
+  bool near_only = tsplit >= tmax || tsplit <= 0;
   bool far_only = tsplit <= tmin;
 
   if( near_only ) return near->intersect(r, prims, target);
