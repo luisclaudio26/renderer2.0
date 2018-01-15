@@ -16,14 +16,16 @@ public:
   std::vector<int> prims_ids;
 
   KdNode() : left(NULL), right(NULL) {}
-  KdNode(const std::vector<Primitive::ptr>& prims,
-          const std::vector<AABB>& aabbs,
-          const std::vector<int>& prims_ids, const AABB& aabb);
+  KdNode(const std::vector<AABB>& aabbs,
+          const std::vector<int>& prims_ids,
+          const AABB& aabb, int recursion_depth = 0);
 
-  float split_at(const std::vector<Primitive::ptr>& prims,
-                  const std::vector<AABB>& aabbs,
-                  const std::vector<int>& prims_ids,
-                  const AABB& aabb, int& axis);
+  void make_leaf(const std::vector<int>& prims_ids, const AABB& aabb);
+
+  bool should_split(const std::vector<AABB>& aabbs,
+                    const std::vector<int>& prims_ids,
+                    const AABB& aabb, int& axis, float& t_split);
+
   bool is_leaf() const;
   bool intersect(const Ray& r, const std::vector<Primitive::ptr>& prims,
                   float tmin, float tmax, Isect& target) const;

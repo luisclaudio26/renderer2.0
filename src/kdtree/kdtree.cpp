@@ -3,26 +3,9 @@
 #include <algorithm>
 
 static const int MAX_PRIM = 15;
+static const int MAX_DEPTH = 10;
 
-static void compute_aabb(const std::vector<Primitive::ptr>& prims, AABB& target)
-{
-  target.min = Vec3(FLT_MAX, FLT_MAX, FLT_MAX);
-  target.max = Vec3(-FLT_MAX, -FLT_MAX, -FLT_MAX);
-
-  for(auto p : prims)
-  {
-      AABB p_aabb; p->aabb(p_aabb);
-      for(int i = 0; i < 3; ++i)
-      {
-        //TODO: is it necessary to take the minimum of
-        //p_aabb's min and max corners? I don't think so
-        target.min[i] = std::fmin(p_aabb.min[i], target.min[i]);
-        target.max[i] = std::fmax(p_aabb.max[i], target.max[i]);
-      }
-  }
-}
-
-static void compute_aabb(const std::vector<Primitive::ptr>& prims,
+static void compute_aabb(const std::vector<AABB>& aabbs,
                           const std::vector<int>& prims_ids, AABB& target)
 {
   target.min = Vec3(FLT_MAX);
@@ -30,7 +13,7 @@ static void compute_aabb(const std::vector<Primitive::ptr>& prims,
 
   for(auto id : prims_ids)
   {
-    AABB p_aabb; prims[id]->aabb(p_aabb);
+    AABB p_aabb = aabbs[id]; //prims[id]->aabb(p_aabb);
     for(int i = 0; i < 3; ++i)
     {
       //TODO: is it necessary to take the minimum of
@@ -40,6 +23,24 @@ static void compute_aabb(const std::vector<Primitive::ptr>& prims,
     }
   }
 }
+
+struct Edge
+{
+  float t; //position of this edge
+  int prim; //to which primitive it belongs
+  enum {START,END} type; //this edge is the right (start) or
+                          //left (end) edge of the primitive
+
+  Edge(float t, int prim, bool start) : t(t), prim(prim)
+  {
+    type = start ? START : END;
+  }
+
+  bool operator<(const Edge& rhs)
+  {
+    return t < rhs.t || (t == rhs.t && (int)type < (int)rhs.type);
+  }
+};
 
 //-----------------------------------
 //---------- FROM KDTREE.H ----------
@@ -128,76 +129,141 @@ bool KdTree::intersect(const Ray& r, const std::vector<Primitive::ptr>& prims,
   else return false; //we missed the biggest box; stop!
 }
 
-bool KdNode::is_leaf() const
-{
-  return left == NULL && right == NULL;
-}
+bool KdNode::is_leaf() const { return left == NULL && right == NULL; }
 
-float KdNode::split_at(const std::vector<Primitive::ptr>& prims,
-                        const std::vector<AABB>& aabbs,
-                        const std::vector<int>& prims_ids,
-                        const AABB& aabb, int& axis)
+bool KdNode::should_split(const std::vector<AABB>& aabbs,
+                          const std::vector<int>& prims_ids,
+                          const AABB& aabb, int& axis, float& t_split)
 {
-  //get longest axis
-  int longest = 0;
-  for(int i = 0; i < 3; ++i)
-    if(fabs(aabb.max[i]-aabb.min[i]) > fabs(aabb.max[longest]-aabb.min[longest]))
-      longest = i;
-  axis = longest;
+  //--------- Surface Area Heuristic ----------
+  const float ISECT_COST = 40.0f;
+  const float TRAV_COST = 1.0f;
+  const float EMPTY_BONUS = 0.7f; //when the split leaves one of the children
+                                  //completely empty, reduce the cost of this
+                                  //split in EMPTY_BONUS percent
 
-  //split at median
-  std::vector<float> edges;
-  for(auto id : prims_ids)
+  int n_prims = prims_ids.size();
+  float leaf_cost = n_prims * ISECT_COST;
+
+  //1. compute area of the full bounding box
+  Vec3 box_extent = aabb.max - aabb.min;
+  float SA = 2.0f*(box_extent[0]*box_extent[1] +
+                    box_extent[0]*box_extent[2] +
+                    box_extent[1]*box_extent[2]);
+  float invSA = 1.0f / SA;
+
+  //2. for each AXIS
+  float best_split_cost = FLT_MAX;
+  float best_split_point;
+  int best_split_axis = -1;
+
+  for(int axis = 0; axis < 3; ++axis)
   {
-    AABB p_aabb = aabbs[id];
-    edges.push_back(p_aabb.min[longest]);
-    edges.push_back(p_aabb.max[longest]);
+    //2.1. put bounding boxes edges inside vector and sort it
+    std::vector<Edge> edges;
+    for(auto id : prims_ids)
+    {
+      AABB p_aabb = aabbs[id]; //prims[id]->aabb(p_aabb);
+      edges.push_back( Edge(p_aabb.min[axis], id, true) );
+      edges.push_back( Edge(p_aabb.max[axis], id, false) );
+    }
+    std::sort(edges.begin(), edges.end());
+
+    //2.2. loop over the edges:
+    int n_right = n_prims, n_left = 0;
+    float split_cost = FLT_MAX, split_point;
+    for(auto e : edges)
+    {
+      if(e.type == Edge::END) n_left++;
+
+      //it will happen that split points will be outside
+      //the bounding boxes boundaries, when primitive is
+      //shared between two different boxes. we can't split
+      //in a point outside the box!
+      if( e.t > aabb.min[axis] && e.t < aabb.max[axis] )
+      {
+        //2.2.1 compute area of the children nodes
+        int oa0 = (axis+1)%3, oa1 = (axis+2)%3; //the other axes besides
+                                                //the current one
+
+        float SL = 2.0f*(box_extent[oa0]*box_extent[oa1] +
+                        (e.t - aabb.min[axis]) *
+                        (box_extent[oa0]+box_extent[oa1]));
+
+        float SR = 2.0f*(box_extent[oa0]*box_extent[oa1] +
+                        (aabb.max[axis] - e.t) *
+                        (box_extent[oa0]+box_extent[oa1]));
+
+        float pL = SL*invSA, pR = SR*invSA;
+
+        //2.2.2 compute cost of split
+        float eb = (n_left == 0 || n_right == 0) ? EMPTY_BONUS : 1.0f;
+        float cur_split_cost = TRAV_COST + (pL*n_left+pR*n_right)*ISECT_COST*eb;
+
+        //2.2.3 check whether it is less than the best cost
+        if( cur_split_cost < split_cost )
+        {
+          split_cost = cur_split_cost;
+          split_point = e.t;
+        }
+      }
+
+      if(e.type == Edge::START) n_right--;
+    }
+
+    //check whether splitting in this axis is better than the previous
+    if( best_split_axis == -1 || split_cost < best_split_cost )
+    {
+      best_split_cost = split_cost;
+      best_split_axis = axis;
+      best_split_point = split_point;
+    }
   }
 
-  std::sort(edges.begin(), edges.end());
-  return edges[edges.size()/2];
-
+  //3. check whether we should split or make a leafs
+  t_split = best_split_point;
+  axis = best_split_axis;
+  return best_split_cost < leaf_cost;
 }
 
-KdNode::KdNode(const std::vector<Primitive::ptr>& prims,
-                const std::vector<AABB>& aabbs,
-                const std::vector<int>& prims_ids, const AABB& aabb)
+void KdNode::make_leaf(const std::vector<int>& prims_ids, const AABB& aabb)
+{
+  this->left = this->right = NULL;
+  this->aabb = aabb;
+  this->axis = -1; this->split = 0.0f;
+  this->prims_ids = std::move( prims_ids );
+}
+
+KdNode::KdNode(const std::vector<AABB>& aabbs,
+                const std::vector<int>& prims_ids,
+                const AABB& aabb, int recursion_depth)
 {
   //stop criterion
-  if(prims_ids.size() < MAX_PRIM)
-  {
-    this->left = this->right = NULL;
-    this->prims_ids = std::move( prims_ids );
-    this->aabb = aabb;
-    this->axis = -1;
-    this->split = -1.0f;
-  }
+  if(prims_ids.size() < MAX_PRIM || recursion_depth >= MAX_DEPTH)
+    make_leaf( prims_ids, aabb );
   else
   {
     //choose splitting point
     float split; int axis;
-    split = split_at(prims, aabbs, prims_ids, aabb, axis);
-
-    //classify primitives into left/right
-    std::vector<int> left, right;
-    for(auto id : prims_ids)
+    if( !should_split(aabbs, prims_ids, aabb, axis, split) )
+      make_leaf(prims_ids, aabb);
+    else
     {
-      AABB p_aabb = aabbs[id];
+      //classify primitives into left/right
+      std::vector<int> left, right;
+      for(auto id : prims_ids)
+      {
+        AABB p_aabb = aabbs[id];
 
-      if(p_aabb.min[axis] < split) left.push_back( id );
-      if(p_aabb.max[axis] > split) right.push_back( id );
-    }
+        if(p_aabb.min[axis] < split) left.push_back( id );
+        if(p_aabb.max[axis] > split) right.push_back( id );
+      }
 
-    //count the number of primitives shared in left and right
-    //vectors. If they share more than x% of the primitives,
-    //give up and build leaf node
-    //TODO: use Surface Area Heuristic!
-    int overlap = left.size()+right.size()-prims_ids.size();
-    float shared_left = (float)std::abs(overlap)/left.size();
-    float shared_right = (float)std::abs(overlap)/right.size();
+      //set internal node data
+      this->split = split;
+      this->axis = axis;
+      this->aabb = aabb;
 
-    if(shared_left < 0.5f && shared_right < 0.5f)
-    {
       //compute new bounding boxes
       AABB left_aabb = aabb;
       left_aabb.max[axis] = split;
@@ -205,21 +271,9 @@ KdNode::KdNode(const std::vector<Primitive::ptr>& prims,
       AABB right_aabb = aabb;
       right_aabb.min[axis] = split;
 
-      this->split = split;
-      this->axis = axis;
-      this->aabb = aabb;
-
       //recursively build children
-      this->left = new KdNode(prims, aabbs, left, left_aabb);
-      this->right = new KdNode(prims, aabbs, right, right_aabb);
-    }
-    else
-    {
-      this->left = this->right = NULL;
-      this->prims_ids = std::move( prims_ids );
-      this->aabb = aabb;
-      this->axis = -1;
-      this->split = -1.0f;
+      this->left = new KdNode(aabbs, left, left_aabb, recursion_depth+1);
+      this->right = new KdNode(aabbs, right, right_aabb, recursion_depth+1);
     }
   }
 
@@ -237,6 +291,6 @@ void KdTree::build(const std::vector<Primitive::ptr>& prims)
   for(int i = 0; i < prims.size(); ++i)
     prims[i]->aabb(aabbs[i]);
 
-  AABB aabb; compute_aabb(prims, prims_ids, aabb);
-  root = KdNode(prims, aabbs, prims_ids, aabb);
+  AABB aabb; compute_aabb(aabbs, prims_ids, aabb);
+  root = KdNode(aabbs, prims_ids, aabb);
 }
