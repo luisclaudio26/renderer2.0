@@ -12,7 +12,6 @@ private:
 
   //TODO: fix units! better if in mm
   float ar, fw, fh, fd; //aspect ratio, film width, height and distance
-  int hRes, vRes; //horizontal and vertical resolution in pixels
   Vec3 film_bl, film_ur; //film bottom-left and upper-right corners
 
   Mat3 cam2world, world2cam;

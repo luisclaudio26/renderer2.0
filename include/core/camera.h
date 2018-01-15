@@ -11,6 +11,9 @@ class Camera
 public:
   typedef std::shared_ptr<Camera> ptr;
 
+  //horizontal and vertical resolution in pixels
+  int vRes, hRes;
+
 	virtual Ray getRay(const Vec2& uv) const = 0;
 
   static Camera::ptr load_from_json(const nlohmann::json& in);

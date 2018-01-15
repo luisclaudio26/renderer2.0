@@ -27,7 +27,7 @@ void Integrator::render_patch(ImageTools::RGBuchar* img, const Scene& scene,
 
 void Integrator::render(const Scene& scene)
 {
-  int hRes = 1920, vRes = 1080;
+  int hRes = scene.cam->hRes, vRes = scene.cam->vRes;
   ImageTools::RGBuchar *img = new ImageTools::RGBuchar[hRes*vRes];
 
   //TODO: general code for spawning threads:
