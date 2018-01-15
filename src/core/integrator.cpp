@@ -2,15 +2,19 @@
 #include "../../include/integrator/pathtracer.h"
 #include <thread>
 #include <cstdio>
+#include <chrono>
+using namespace std::chrono;
 
 void Integrator::render_patch(ImageTools::RGBuchar* img, const Scene& scene,
                               int row, int col, int height, int width,
-                              int vRes, int hRes)
+                              int vRes, int hRes, int thread_id)
 {
   //this function is meant to be executed by an specific thread
   //which will render this block of WidthxHeight size, starting
   //at (row, col)
-  //TODO: some bug is causing the image to be flipped, check this after!
+  double acc_time = 0.0f; int pixel_count = 0;
+  int n_pixels = height*width;
+
   for(int i = row; i < row+height; ++i)
     for(int j = col; j < col+width; ++j)
     {
@@ -19,10 +23,24 @@ void Integrator::render_patch(ImageTools::RGBuchar* img, const Scene& scene,
       float u = (j - half_hRes)/ half_hRes;
       float v = (half_vRes - i)/ half_vRes;
 
+      high_resolution_clock::time_point tS = high_resolution_clock::now();
       RGB sample = integrate(Vec2(u,v), scene);
+      high_resolution_clock::time_point tE = high_resolution_clock::now();
+
+      duration<double> time_span = duration_cast<duration<double>>(tE - tS);
+      acc_time += time_span.count();
 
       img[i*hRes+j] = ImageTools::rgb_float_to_uchar(sample);
+
+      pixel_count++;
+
+
+      if(pixel_count % 100 == 0)
+        printf("(Thread %d) %f%%\n", thread_id, (float)100.0f*pixel_count / n_pixels);
     }
+
+  printf("Avg integration time (thread %d): %fs\n", thread_id,
+                                                    acc_time/n_pixels);
 }
 
 void Integrator::render(const Scene& scene)
@@ -46,8 +64,8 @@ void Integrator::render(const Scene& scene)
       int col = j * width;
 
       rendering_threads.push_back(std::thread(&Integrator::render_patch, this,
-                                              img, scene, row, col,
-                                              height, width, vRes, hRes));
+                                              img, scene, row, col, height, width,
+                                              vRes, hRes, (i*hori_sectors)+j) );
     }
 
   for(auto t = rendering_threads.begin(); t != rendering_threads.end(); ++t)

@@ -16,7 +16,8 @@ private:
   virtual RGB integrate(const Vec2& uv, const Scene& scene) const = 0;
 
   void render_patch(ImageTools::RGBuchar* img, const Scene& scene,
-                    int row, int col, int height, int width, int vRes, int hRes);
+                    int row, int col, int height, int width,
+                    int vRes, int hRes, int thread_id);
 public:
   typedef std::shared_ptr<Integrator> ptr;
 

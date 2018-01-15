@@ -136,9 +136,9 @@ bool KdNode::should_split(const std::vector<AABB>& aabbs,
                           const AABB& aabb, int& axis, float& t_split)
 {
   //--------- Surface Area Heuristic ----------
-  const float ISECT_COST = 40.0f;
+  const float ISECT_COST = 25.0f;
   const float TRAV_COST = 1.0f;
-  const float EMPTY_BONUS = 0.7f; //when the split leaves one of the children
+  const float EMPTY_BONUS = 0.9f; //when the split leaves one of the children
                                   //completely empty, reduce the cost of this
                                   //split in EMPTY_BONUS percent
 
