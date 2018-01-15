@@ -1,6 +1,7 @@
 #include "../../include/kdtree/kdtree.h"
 #include <glm/gtx/string_cast.hpp>
 #include <algorithm>
+#include <stack>
 
 static const int MAX_PRIM = 15;
 static const int MAX_DEPTH = 10;
@@ -118,15 +119,112 @@ bool KdNode::intersect(const Ray& r, const std::vector<Primitive::ptr>& prims,
   }
 }
 
+struct TraversalNode
+{
+  const KdNode* node;
+  float tmin, tmax;
+
+  TraversalNode(const KdNode* node, float tmin, float tmax)
+    : node(node), tmin(tmin), tmax(tmax) {}
+};
+
 bool KdTree::intersect(const Ray& r, const std::vector<Primitive::ptr>& prims,
                         Isect& isect) const
 {
+  /*
   isect.t = FLT_MAX;
-
   float tmin, tmax;
   if( root.aabb.intersect(r, tmin, tmax) )
     return root.intersect(r, prims, tmin, tmax, isect);
   else return false; //we missed the biggest box; stop!
+  */
+
+  isect.t = FLT_MAX;
+  float full_tmin, full_tmax;
+  if( !root.aabb.intersect(r, full_tmin, full_tmax) ) return false;
+
+  bool hit = false;
+  std::stack<TraversalNode> stack;
+  stack.push( TraversalNode(&root, full_tmin, full_tmax) );
+
+  while( !stack.empty() )
+  {
+    //get node on top of stack
+    TraversalNode tn = stack.top(); stack.pop();
+    const KdNode* cur = tn.node;
+    float tmin = tn.tmin, tmax = tn.tmax;
+
+    if( cur->is_leaf() )
+    {
+      for(auto id : cur->prims_ids)
+      {
+        Primitive::ptr p = prims[id];
+        Isect p_isect; p->intersect(r, p_isect);
+
+        if( p_isect.is_valid() && p_isect.t < isect.t)
+        {
+          isect = p_isect;
+          hit = true;
+        }
+      }
+
+      if(hit) break;
+    }
+    else
+    {
+      //if ray is parallel to the splitting plane, there's no problem:
+      //tsplit will be +INF, so it will be >= tmax (and won't be <= tmin),
+      //thus we'll explore the NEAR box only, which is correct.
+      //Problems may occur if the ray's origin is exactly on the splitting
+      //plane, in which case we simply shift it a bit to the right.
+      float split = cur->split; if(split == r.o[cur->axis]) split += 0.000001f;
+      float tsplit = (split - r.o[cur->axis])/r.d[cur->axis];
+
+      //define NEAR and FAR boxes.
+      //this is defined by checking at which side of the
+      //splitting plane the origin is. If the ray is exactly
+      //on the origin, the direction defines which plane is near
+      KdNode *near, *far;
+      if( r.o[cur->axis] < split ||
+          (r.o[cur->axis] == split && r.d[cur->axis] < 0) )
+      {
+        near = cur->left;
+        far = cur->right;
+      }
+      else
+      {
+        near = cur->right;
+        far = cur->left;
+      }
+
+      //decide whether we must traverse NEAR only, FAR only or both
+      //The case where both boxes should be visited (tmin < tsplit
+      //&& tsplit < tmax) is equivalent to !near_only and !far_only.
+      //Technically we should require that tsplit > 0 for far_only
+      //to be true, but adding this clause won't change anything.
+      //
+      //Border cases, where tmin = tmax, are correctly also correctly
+      //covered by this logic
+      //
+      //There's a subtlety here: everytime tsplit < 0, both near_only
+      //and far_only are TRUE. However, as near_only is the first condition
+      //tested, it returns true and we test only the nearest box, which is
+      //CORRECT
+      bool near_only = tsplit >= tmax || tsplit <= 0;
+      bool far_only = tsplit <= tmin;
+
+      if( near_only ) stack.push( TraversalNode(near, tmin, tmax) );
+      else if( far_only ) stack.push( TraversalNode(far, tmin, tmax) );
+      else
+      {
+        stack.push( TraversalNode(far, tsplit, tmax) );
+        stack.push( TraversalNode(near, tmin, tsplit) );
+      }
+    }
+
+  }
+
+  return hit;
 }
 
 bool KdNode::is_leaf() const { return left == NULL && right == NULL; }
@@ -136,9 +234,9 @@ bool KdNode::should_split(const std::vector<AABB>& aabbs,
                           const AABB& aabb, int& axis, float& t_split)
 {
   //--------- Surface Area Heuristic ----------
-  const float ISECT_COST = 25.0f;
+  const float ISECT_COST = 70.0f;
   const float TRAV_COST = 1.0f;
-  const float EMPTY_BONUS = 0.9f; //when the split leaves one of the children
+  const float EMPTY_BONUS = 0.8f; //when the split leaves one of the children
                                   //completely empty, reduce the cost of this
                                   //split in EMPTY_BONUS percent
 

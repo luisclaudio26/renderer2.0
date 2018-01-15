@@ -33,10 +33,7 @@ void Integrator::render_patch(ImageTools::RGBuchar* img, const Scene& scene,
       img[i*hRes+j] = ImageTools::rgb_float_to_uchar(sample);
 
       pixel_count++;
-
-
-      if(pixel_count % 100 == 0)
-        printf("(Thread %d) %f%%\n", thread_id, (float)100.0f*pixel_count / n_pixels);
+      //if(pixel_count % 100 == 0) printf("(Thread %d) %f%%\n", thread_id, (float)100.0f*pixel_count / n_pixels);
     }
 
   printf("Avg integration time (thread %d): %fs\n", thread_id,
