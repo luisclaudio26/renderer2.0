@@ -46,6 +46,7 @@ struct Edge
 //-----------------------------------
 //---------- FROM KDTREE.H ----------
 //-----------------------------------
+//DEPRECATED!
 bool KdNode::intersect(const Ray& r, const std::vector<Primitive::ptr>& prims,
                         float tmin, float tmax, Isect& target) const
 {
