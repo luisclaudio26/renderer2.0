@@ -1,4 +1,4 @@
-#include "../../include/primitive/triangle.h"
+#include "../../include/core/triangle.h"
 
 #include <iostream>
 #include <glm/gtx/string_cast.hpp>

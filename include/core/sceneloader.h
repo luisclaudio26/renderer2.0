@@ -2,9 +2,6 @@
 #define SCENELOADER_H
 
 #include "shape.h"
-#include "primitive.h"
-#include "material.h"
-#include "texture.h"
 #include "background.h"
 #include "camera.h"
 #include "scene.h"
@@ -17,7 +14,7 @@ private:
   std::vector<Shape::ptr> shapes;
   Camera::ptr camera;
   Background::ptr bgd;
-    
+
 public:
   bool load_scene_from_json(const nlohmann::json& in);
   void generate_scene(Scene& target);

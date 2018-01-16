@@ -2,13 +2,13 @@
 #define SCENE_H
 
 #include <vector>
-#include "primitive.h"
 #include "material.h"
 #include "texture.h"
 #include "intersection.h"
 #include "camera.h"
 #include "background.h"
 #include "../kdtree/kdtree.h"
+#include "triangle.h"
 
 class Scene
 {
@@ -26,11 +26,11 @@ public:
   //OR create a link to the next block. It would be
   //slow to create but, once created it, everything would
   //be well aligned and cache usage would maybe improve
-  std::vector<Primitive::ptr> prims;
+  std::vector<Triangle> prims;
   std::vector<Material::ptr> materials;
   std::vector<Texture::ptr> textures;
 
-  std::vector<Primitive::ptr> emissive;
+  std::vector<int> emissive;
 
   Camera::ptr cam;
   Background::ptr bgd;

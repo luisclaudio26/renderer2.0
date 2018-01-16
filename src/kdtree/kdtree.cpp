@@ -47,7 +47,7 @@ struct Edge
 //---------- FROM KDTREE.H ----------
 //-----------------------------------
 //DEPRECATED!
-bool KdNode::intersect(const Ray& r, const std::vector<Primitive::ptr>& prims,
+bool KdNode::intersect(const Ray& r, const std::vector<Triangle>& prims,
                         float tmin, float tmax, Isect& target) const
 {
   if( is_leaf() )
@@ -55,8 +55,8 @@ bool KdNode::intersect(const Ray& r, const std::vector<Primitive::ptr>& prims,
     bool hit = false;
     for(auto id : prims_ids)
     {
-      Primitive::ptr p = prims[id];
-      Isect p_isect; p->intersect(r, p_isect);
+      Triangle t = prims[id];
+      Isect p_isect; t.intersect(r, p_isect);
 
       if( p_isect.is_valid() && p_isect.t < target.t)
       {
@@ -129,7 +129,7 @@ struct TraversalNode
     : node(node), tmin(tmin), tmax(tmax) {}
 };
 
-bool KdTree::intersect(const Ray& r, const std::vector<Primitive::ptr>& prims,
+bool KdTree::intersect(const Ray& r, const std::vector<Triangle>& prims,
                         Isect& isect) const
 {
   /*
@@ -159,8 +159,8 @@ bool KdTree::intersect(const Ray& r, const std::vector<Primitive::ptr>& prims,
     {
       for(auto id : cur->prims_ids)
       {
-        Primitive::ptr p = prims[id];
-        Isect p_isect; p->intersect(r, p_isect);
+        Triangle t = prims[id];
+        Isect p_isect; t.intersect(r, p_isect);
 
         if( p_isect.is_valid() && p_isect.t < isect.t)
         {
@@ -378,7 +378,7 @@ KdNode::KdNode(const std::vector<AABB>& aabbs,
 
 }
 
-void KdTree::build(const std::vector<Primitive::ptr>& prims)
+void KdTree::build(const std::vector<Triangle>& prims)
 {
   //this vector will contain indices to all primitives
   //we want to store inside the tree
@@ -388,7 +388,7 @@ void KdTree::build(const std::vector<Primitive::ptr>& prims)
   //precompute bounding boxes
   std::vector<AABB> aabbs; aabbs.reserve(prims.size());
   for(int i = 0; i < prims.size(); ++i)
-    prims[i]->aabb(aabbs[i]);
+    prims[i].aabb(aabbs[i]);
 
   AABB aabb; compute_aabb(aabbs, prims_ids, aabb);
   root = KdNode(aabbs, prims_ids, aabb);

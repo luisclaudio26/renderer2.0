@@ -1,4 +1,8 @@
 #include "../../include/core/sceneloader.h"
+#include "../../include/core/triangle.h"
+#include "../../include/core/material.h"
+#include "../../include/core/texture.h"
+
 
 bool SceneLoader::load_scene_from_json(const nlohmann::json& in)
 {

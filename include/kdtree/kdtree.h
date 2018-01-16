@@ -1,8 +1,8 @@
 #ifndef KDTREE_H
 #define KDTREE_H
 
-#include "../core/primitive.h"
 #include "../core/geometry.h"
+#include "../core/triangle.h"
 
 class KdNode
 {
@@ -27,7 +27,7 @@ public:
                     const AABB& aabb, int& axis, float& t_split);
 
   bool is_leaf() const;
-  bool intersect(const Ray& r, const std::vector<Primitive::ptr>& prims,
+  bool intersect(const Ray& r, const std::vector<Triangle>& prims,
                   float tmin, float tmax, Isect& target) const;
 };
 
@@ -37,8 +37,8 @@ private:
   KdNode root;
 
 public:
-  void build(const std::vector<Primitive::ptr>& prims);
-  bool intersect(const Ray& r, const std::vector<Primitive::ptr>& prims,
+  void build(const std::vector<Triangle>& prims);
+  bool intersect(const Ray& r, const std::vector<Triangle>& prims,
                   Isect& isect) const;
 };
 

@@ -10,8 +10,8 @@ bool Scene::intersect(const Ray& r, Isect& target) const
 void Scene::preprocess()
 {
   //store emissive primitives
-  for(auto p : prims)
-    if(p->material->is_emissive()) emissive.push_back(p);
+  for(int i = 0; i < prims.size(); ++i)
+    if( prims[i].material->is_emissive() ) emissive.push_back(i);
 
   //build kdtree
   printf("Building tree...\n");

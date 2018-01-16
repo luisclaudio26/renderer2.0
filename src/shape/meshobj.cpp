@@ -8,14 +8,13 @@
 //----------------------------------
 //--------- FROM MESHOBJ.H ---------
 //----------------------------------
-void MeshOBJ::generate_primitives(std::vector<Primitive::ptr>& target) const
+void MeshOBJ::generate_primitives(std::vector<Triangle>& target) const
 {
   //store triangles in world space
   for(auto t : tris)
   {
-    Triangle *t_ws = new Triangle(t);
-    t_ws->transform(this->model2world);
-    target.push_back( Primitive::ptr(t_ws) );
+    target.push_back( t );
+    target.back().transform(this->model2world);
   }
 }
 
