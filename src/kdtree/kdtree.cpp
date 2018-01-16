@@ -159,7 +159,7 @@ bool KdTree::intersect(const Ray& r, const std::vector<Triangle>& prims,
     {
       for(auto id : cur->prims_ids)
       {
-        Triangle t = prims[id];
+        const Triangle& t = prims[id];
         Isect p_isect; t.intersect(r, p_isect);
 
         if( p_isect.is_valid() && p_isect.t < isect.t)

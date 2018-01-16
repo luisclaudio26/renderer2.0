@@ -3,7 +3,7 @@
 #include <iostream>
 #include <glm/gtx/string_cast.hpp>
 
-void Triangle::intersect(const Ray& ray, Isect& isect) const
+void Triangle::intersect(const Ray& ray, Isect& isect, bool bf_cull) const
 {
   isect.t = -1.0f;
 
@@ -16,7 +16,9 @@ void Triangle::intersect(const Ray& ray, Isect& isect) const
   float det = glm::dot(v0v1, pvec);
 
   //TODO: backface culling
-  if(fabs(det) < 0.00000001) return;
+  if(bf_cull && det < 0.00000001) return;
+  else if(!bf_cull && fabs(det) < 0.00000001 ) return;
+  
   float invDet = 1 / det;
 
   Vec3 tvec = ray.o - this->v[0];
