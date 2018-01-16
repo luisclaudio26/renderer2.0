@@ -79,10 +79,12 @@ void Integrator::render(const Scene& scene)
   //not multiple of p and q!!!
   int vert_sectors = 2, hori_sectors = 4;
 
+  #ifdef DEBUG
   n_threads = vert_sectors * hori_sectors;
   progress_bar = new float[n_threads];
   for(int i = 0; i < n_threads; ++i)
     progress_bar[i] = 0.0f;
+  #endif
 
   std::vector<std::thread> rendering_threads;
   for(int i = 0; i < vert_sectors; ++i)
