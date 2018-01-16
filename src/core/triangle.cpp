@@ -18,7 +18,7 @@ void Triangle::intersect(const Ray& ray, Isect& isect, bool bf_cull) const
   //TODO: backface culling
   if(bf_cull && det < 0.00000001) return;
   else if(!bf_cull && fabs(det) < 0.00000001 ) return;
-  
+
   float invDet = 1 / det;
 
   Vec3 tvec = ray.o - this->v[0];
