@@ -24,6 +24,10 @@ public:
   virtual RGB sample(const Vec3& wi, const Vec3& wo,
                       const Vec3& normal, const Vec2& uv) const = 0;
 
+  //TODO: this should not be virtual. create a vector of vector
+  virtual void sample_BSDF(const Vec2& uv, const Ray& wi, const Vec3& normal,
+                            Vec3& wo, float& wo_pdf, RGB& brdf) const = 0;
+
   //load material data from JSON file into material/texture vectors.
   //in case we need more than one material to be loaded (in the case of
   //.mtl files, for example, where many different materials are described),

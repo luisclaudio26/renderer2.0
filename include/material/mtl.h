@@ -28,8 +28,15 @@ public:
   // 1 == opaque; 0 == fully transparent
   float dissolve; Texture::ptr dissolve_tex;
 
+  //BxDF's
+  //Lambertian diff;
+  //CookTorrance spec;
+
   RGB sample(const Vec3& wi, const Vec3& wo,
               const Vec3& normal, const Vec2& uv) const override;
+
+  void sample_BSDF(const Vec2& uv, const Ray& wi, const Vec3& normal,
+                    Vec3& wo, float& wo_pdf, RGB& brdf) const override;
 
   bool is_emissive() const override
   {
