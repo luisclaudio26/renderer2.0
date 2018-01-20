@@ -13,8 +13,8 @@ public:
   Vec3 normal;
   Vec2 uv; //UV coordinates of the intersection point
 
-  //TODO: are t = INF intersections valid? 
-  bool is_valid() const { return t > 0; }
+  //TODO: are t = INF intersections valid?
+  bool is_valid() const { return t > 0 && t < FLT_MAX; }
 };
 
 #endif
