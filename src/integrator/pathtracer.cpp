@@ -21,26 +21,26 @@ static RGB sample_path(int path_length, const Scene& scene,
 
   for(int i = 0; i < path_length-1; ++i)
   {
+    //if at this point we intersected no primitive, the contribution
+    //of this path will then depend of the background
     if( !cur_isect.is_valid() )
-    {
-      return RGB(0.f, 0.f, 1.f);
-    }
+      return throughput * scene.bgd->sample( cur_ray );
 
-    //2. sample BSDF to get the next direction. we are importance sampling
-    //the BSDF here, trying to build a path of high contribution!ss
-    //3. get ray's PDF
+    //sample BSDF to get the next direction. we are importance sampling
+    //the BSDF here, trying to build a path of high contribution!
     Vec3 wo; float wo_pdf; RGB brdf;
     cur_isect.material->sample_BSDF(cur_isect.uv, cur_ray, cur_isect.normal,
                                     wo, wo_pdf, brdf);
 
-    //4. throughput *= dot(Normal, next_ray) * brdf(cur_ray, next_ray, uv, normal) / pdf(next_ray)
-    throughput *= glm::dot(wo, cur_isect.normal);
+    //update throughput
+    throughput *= glm::dot(wo, cur_isect.normal) * brdf / wo_pdf;
 
-    //5. compute intersection of next_ray and store it directly into cur_isect
-    Ray next_ray(cur_vertex + cur_isect.normal * 0.001f, wo);
+    //compute closest intersection of next_ray
+    //and store it directly into cur_isect
+    Ray next_ray(cur_vertex + cur_isect.normal * 0.00001f, wo);
     scene.intersect(next_ray, cur_isect);
 
-    //5. cur_ray = next_ray, cur_vertex = next_vertex, cur_isect = next_isect
+    //update stuff for next iteration
     cur_ray = next_ray;
     cur_vertex = cur_ray(cur_isect.t);
   }
@@ -49,12 +49,13 @@ static RGB sample_path(int path_length, const Scene& scene,
   //we sample the light sources (this will change once
   //we implement multiple importance sampling)
 
-  //2. update throughput with probability computed
+  //update throughput with probability computed
   //not using BSDF sampling, but actual area sampling
 
-  //3. get acual emission spectrum from the last primitive
+  //get acual emission spectrum from the last primitive
+  RGB Le(.0f);
 
-  return throughput * .0f;
+  return throughput * Le;
 }
 
 RGB Pathtracer::integrate(const Vec2& uv, const Scene& scene) const

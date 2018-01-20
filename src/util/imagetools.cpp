@@ -1,14 +1,15 @@
 #include "../../include/util/imagetools.h"
 #include <cstdio>
+#include <cmath>
 
 namespace ImageTools
 {
   RGBuchar rgb_float_to_uchar(RGB p)
   {
   	RGBuchar out;
-  	out.r = (unsigned char)(255.0f * p.r);
-  	out.g = (unsigned char)(255.0f * p.g);
-  	out.b = (unsigned char)(255.0f * p.b);
+  	out.r = (unsigned char)std::fmin(255.0f, 255.0f * p.r);
+  	out.g = (unsigned char)std::fmin(255.0f, 255.0f * p.g);
+  	out.b = (unsigned char)std::fmin(255.0f, 255.0f * p.b);
   	return out;
   }
 
