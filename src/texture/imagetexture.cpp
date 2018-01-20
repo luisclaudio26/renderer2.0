@@ -1,5 +1,6 @@
 #include "../../include/texture/imagetexture.h"
 #include "../../include/util/log.h"
+#include <glm/gtx/wrap.hpp>
 #include <glm/gtx/string_cast.hpp>
 #include <cstdlib>
 #include <cstdio>
@@ -16,8 +17,11 @@ static FREE_IMAGE_FORMAT fif_from_str(const std::string& ext)
 //--------------------------------------
 RGB ImageTexture::sample(const Vec2& uv) const
 {
-  int i = (uv.y == 1.0f) ? h-1 : uv.y*h;
-  int j = (uv.x == 1.0f) ? w-1 : uv.x*w;
+  //wrap texture coordinates
+  Vec2 uv_ = glm::repeat(uv);
+
+  int i = (uv_.y == 1.0f) ? h-1 : uv_.y*h;
+  int j = (uv_.x == 1.0f) ? w-1 : uv_.x*w;
 
   return RGB(data[i*w+j]);
 }

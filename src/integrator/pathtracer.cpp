@@ -48,6 +48,7 @@ static RGB sample_path(int path_length, const Scene& scene,
   //the last vertex lies on an emissive primitive, so
   //we sample the light sources (this will change once
   //we implement multiple importance sampling)
+  int p_em;
 
   //update throughput with probability computed
   //not using BSDF sampling, but actual area sampling

@@ -16,10 +16,8 @@ void MTL::sample_BSDF(const Vec2& uv, const Ray& wi, const Vec3& normal,
   //TODO: importance sample BRDFs
   //brdf = RGB(0.318309f); //1/PI
 
-  if( diff_tex.use_count() )
-    brdf = diff_tex->sample(uv) * 0.318309f; //1/PI
-  else
-    brdf = RGB(0.318309f);
+  if( diff_tex.use_count() ) brdf = diff_tex->sample(uv) * 0.318309f; //1/PI
+  else brdf = RGB(0.318309f);
 
   //uniform sample hemisphere
   float u1 = (float)rand()/RAND_MAX;
