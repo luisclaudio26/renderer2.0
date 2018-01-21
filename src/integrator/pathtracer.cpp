@@ -33,8 +33,8 @@ static RGB sample_path(int path_length, const Scene& scene,
                                     wo, wo_pdf, brdf);
 
     //update throughput
-    //throughput *= glm::dot(wo, cur_isect.normal) * brdf / wo_pdf;
-    throughput *= glm::dot(wo, cur_isect.normal) * brdf;
+    throughput *= glm::dot(wo, cur_isect.normal) * brdf / wo_pdf;
+
 
     //compute closest intersection of next_ray
     //and store it directly into cur_isect
@@ -52,13 +52,22 @@ static RGB sample_path(int path_length, const Scene& scene,
   Vec3 light_pos; float light_pdf;
   RGB Le = scene.sample_light(light_pos, light_pdf);
 
-  //update throughput with probability computed
-  //not using BSDF sampling, but actual area sampling
-  //float coupling = dot dot ...
+  //G stands for the geometric coupling term!
+  Vec3 v2l = light_pos - cur_vertex;
+  float d = glm::length(v2l);
+  float cosI = glm::dot(cur_ray.d, cur_isect.normal);
+  float cosO = glm::dot(glm::normalize(v2l), cur_isect.normal);
+  float G = cosI*cosO / (d*d);
 
-  //get acual emission spectrum from the last primitive
+  //this will cause problems with specular materials
+  //(i.e. delta BSDFs)
+  RGB f = cur_isect.material->sample(cur_ray.d, glm::normalize(v2l),
+                                        cur_isect.normal, cur_isect.uv);
 
-  return throughput * Le;
+  //add contribution of the last bounce to the throughput
+  throughput *= (G/light_pdf) * f;
+
+  return Le * throughput;
 }
 
 RGB Pathtracer::integrate(const Vec2& uv, const Scene& scene) const
