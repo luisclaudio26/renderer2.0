@@ -1,5 +1,6 @@
 #include "../../include/core/geometry.h"
 #include <cfloat>
+#include <cstdio>
 
 bool AABB::intersect(const Ray& r, float& tmin, float& tmax) const
 {
@@ -11,7 +12,7 @@ bool AABB::intersect(const Ray& r, float& tmin, float& tmax) const
   for(int i = 0; i < 3; ++i)
   {
     //if r.d[i] == 0, ray is parallel to the current axis
-    if( r.d[i] == 0.0f) continue;
+    if(r.d[i] == 0.0f ) continue;
 
     float t1, t2, ro = r.o[i];
 
@@ -28,5 +29,5 @@ bool AABB::intersect(const Ray& r, float& tmin, float& tmax) const
 
   //tmax = tmin is a hit right in the corner of the box,
   //which we assume to not to be a hit! TODO: is this a problem?
-  return tmax > tmin && tmax > 0.0f;
+  return tmax >= tmin && tmax > 0.0f;
 }

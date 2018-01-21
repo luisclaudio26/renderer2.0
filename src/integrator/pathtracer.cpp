@@ -33,7 +33,8 @@ static RGB sample_path(int path_length, const Scene& scene,
                                     wo, wo_pdf, brdf);
 
     //update throughput
-    throughput *= glm::dot(wo, cur_isect.normal) * brdf / wo_pdf;
+    //throughput *= glm::dot(wo, cur_isect.normal) * brdf / wo_pdf;
+    throughput *= glm::dot(wo, cur_isect.normal) * brdf;
 
     //compute closest intersection of next_ray
     //and store it directly into cur_isect
@@ -48,13 +49,14 @@ static RGB sample_path(int path_length, const Scene& scene,
   //the last vertex lies on an emissive primitive, so
   //we sample the light sources (this will change once
   //we implement multiple importance sampling)
-  int p_em;
+  Vec3 light_pos; float light_pdf;
+  RGB Le = scene.sample_light(light_pos, light_pdf);
 
   //update throughput with probability computed
   //not using BSDF sampling, but actual area sampling
+  //float coupling = dot dot ...
 
   //get acual emission spectrum from the last primitive
-  RGB Le(.0f);
 
   return throughput * Le;
 }

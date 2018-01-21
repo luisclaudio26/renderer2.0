@@ -178,7 +178,7 @@ bool KdTree::intersect(const Ray& r, const std::vector<Triangle>& prims,
       //thus we'll explore the NEAR box only, which is correct.
       //Problems may occur if the ray's origin is exactly on the splitting
       //plane, in which case we simply shift it a bit to the right.
-      float split = cur->split; if(split == r.o[cur->axis]) split += 0.000001f;
+      float split = cur->split; if(split == r.o[cur->axis]) split += 0.0001f;
       float tsplit = (split - r.o[cur->axis])/r.d[cur->axis];
 
       //define NEAR and FAR boxes.
@@ -354,8 +354,8 @@ KdNode::KdNode(const std::vector<AABB>& aabbs,
       {
         AABB p_aabb = aabbs[id];
 
-        if(p_aabb.min[axis] < split) left.push_back( id );
-        if(p_aabb.max[axis] > split) right.push_back( id );
+        if(p_aabb.min[axis] <= split) left.push_back( id );
+        if(p_aabb.max[axis] >= split) right.push_back( id );
       }
 
       //set internal node data

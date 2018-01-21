@@ -42,12 +42,14 @@ void MeshOBJ::load_geometry_data(const std::vector<tinyobj::shape_t>& shapes,
         float vx = attrib.vertices[3*v.vertex_index + 0];
         float vy = attrib.vertices[3*v.vertex_index + 1];
         float vz = attrib.vertices[3*v.vertex_index + 2];
-
-        float tx = attrib.texcoords[2*v.texcoord_index + 0];
-        float ty = attrib.texcoords[2*v.texcoord_index + 1];
-
         face.v[v_id] = Vec3( vx, vy, vz );
-        face.uv[v_id] = Vec2( tx, ty );
+
+        if( !attrib.texcoords.empty() )
+        {
+          float tx = attrib.texcoords[2*v.texcoord_index + 0];
+          float ty = attrib.texcoords[2*v.texcoord_index + 1];
+          face.uv[v_id] = Vec2( tx, ty );
+        }
       }
 
       //load pointer to material. all shapes share the same materials!

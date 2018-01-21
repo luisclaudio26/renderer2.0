@@ -38,6 +38,7 @@ public:
   KdTree tree;
 
   bool intersect(const Ray& r, Isect& target) const;
+  RGB sample_light(Vec3& pos, float& pdf) const { return RGB(.0); }
   void preprocess();
 };
 
