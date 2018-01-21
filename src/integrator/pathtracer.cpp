@@ -57,7 +57,7 @@ static RGB sample_path(int path_length, const Scene& scene,
   float d = glm::length(v2l);
   float cosI = glm::dot(cur_ray.d, cur_isect.normal);
   float cosO = glm::dot(glm::normalize(v2l), cur_isect.normal);
-  float G = cosI*cosO / (d*d);
+  float G = std::fabs(cosI*cosO) / (d*d);
 
   //this will cause problems with specular materials
   //(i.e. delta BSDFs)

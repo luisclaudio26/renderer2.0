@@ -20,6 +20,7 @@ public:
 
   void intersect(const Ray& ray, Isect& isect, bool bf_cull = true) const;
   void aabb(AABB& target) const;
+  float area() const;
 };
 
 #endif

@@ -31,6 +31,7 @@ public:
   std::vector<Texture::ptr> textures;
 
   std::vector<int> emissive;
+  float emissive_area;
 
   Camera::ptr cam;
   Background::ptr bgd;
@@ -40,6 +41,8 @@ public:
   bool intersect(const Ray& r, Isect& target) const;
   RGB sample_light(Vec3& pos, float& pdf) const;
   void preprocess();
+
+  Scene() : emissive_area(0.f) {}
 };
 
 #endif

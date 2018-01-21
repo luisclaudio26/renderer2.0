@@ -3,6 +3,17 @@
 #include <iostream>
 #include <glm/gtx/string_cast.hpp>
 
+float Triangle::area() const
+{
+  //TODO: precompute this
+  Vec3 v0v1 = this->v[1] - this->v[0];
+  Vec3 v0v2 = this->v[2] - this->v[0];
+
+  Vec3 cross = glm::cross(v0v1, v0v2);
+
+  return std::fabs(glm::length(cross)) * 0.5f;
+}
+
 void Triangle::intersect(const Ray& ray, Isect& isect, bool bf_cull) const
 {
   isect.t = -1.0f;

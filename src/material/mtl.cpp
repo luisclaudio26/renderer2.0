@@ -6,7 +6,7 @@ RGB MTL::sample(const Vec3& wi, const Vec3& wo,
 {
   if( diff_tex.use_count() )
     return diff_tex->sample(uv);
-  else return diffuse;
+  else return diffuse * 0.318309f;
 
 }
 
