@@ -21,6 +21,8 @@ public:
   //textures modulating the BSDF
 
   virtual bool is_emissive() const = 0;
+  virtual RGB emissivity() const = 0;
+
   virtual RGB sample(const Vec3& wi, const Vec3& wo,
                       const Vec3& normal, const Vec2& uv) const = 0;
 

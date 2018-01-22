@@ -7,6 +7,11 @@ bool Scene::intersect(const Ray& r, Isect& target) const
   return tree.intersect(r, prims, target);
 }
 
+bool Scene::intersect(const Ray& r, float t) const
+{
+  return tree.intersect(r, prims, t);
+}
+
 void Scene::preprocess()
 {
   //store emissive primitives
@@ -17,7 +22,7 @@ void Scene::preprocess()
       emissive.push_back(i);
     }
 
-  printf("%d emissive primitives\n", emissive.size());
+  printf("%lu emissive primitives\n", emissive.size());
 
   //build kdtree
   printf("Building tree...\n");
@@ -39,6 +44,5 @@ RGB Scene::sample_light(Vec3& pos, float& pdf) const
   pos = u*t.v[0] + v*t.v[1] + w*t.v[2];
   pdf = 1 / emissive_area;
 
-  //TODO: sample primitive's emission profile
-  return RGB(1.f, 0.f, 0.f);
+  return t.material->emissivity();
 }

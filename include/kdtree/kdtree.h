@@ -40,6 +40,9 @@ public:
   void build(const std::vector<Triangle>& prims);
   bool intersect(const Ray& r, const std::vector<Triangle>& prims,
                   Isect& isect) const;
+
+  bool intersect(const Ray& r, const std::vector<Triangle>& prims,
+                  float t) const;
 };
 
 #endif

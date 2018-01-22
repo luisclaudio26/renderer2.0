@@ -43,6 +43,8 @@ public:
     return emission.r > 0 || emission.g > 0 || emission.b > 0;
   }
 
+  RGB emissivity() const override { return emission; }
+
   std::string str() const override
   {
     std::string out("");

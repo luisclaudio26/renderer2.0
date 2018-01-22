@@ -228,6 +228,75 @@ bool KdTree::intersect(const Ray& r, const std::vector<Triangle>& prims,
   return hit;
 }
 
+bool KdTree::intersect(const Ray& r, const std::vector<Triangle>& prims,
+                        float t) const
+{
+    //identical to the regular traversal, except
+    //it returns immediately if any primitive closer
+    //than t was found and we do no backface culling
+    //This could be merged with the first Intersect
+    //method, but it would introduce needless, extra branches
+    float full_tmin, full_tmax;
+    if( !root.aabb.intersect(r, full_tmin, full_tmax) ) return false;
+
+    std::stack<TraversalNode> stack;
+    stack.push( TraversalNode(&root, full_tmin, full_tmax) );
+
+    while( !stack.empty() )
+    {
+      //get node on top of stack
+      TraversalNode tn = stack.top(); stack.pop();
+      const KdNode* cur = tn.node;
+      float tmin = tn.tmin, tmax = tn.tmax;
+
+      if( cur->is_leaf() )
+      {
+        for(auto id : cur->prims_ids)
+        {
+          const Triangle& tri = prims[id];
+          Isect p_isect; tri.intersect(r, p_isect, false);
+
+          //intersection in point closer then r(t); this means
+          //that the point r(t) is occluded!
+          if( p_isect.is_valid() && p_isect.t < t ) return true;
+        }
+      }
+      else
+      {
+        float split = cur->split; if(split == r.o[cur->axis]) split += 0.0001f;
+        float tsplit = (split - r.o[cur->axis])/r.d[cur->axis];
+
+        KdNode *near, *far;
+        if( r.o[cur->axis] < split ||
+            (r.o[cur->axis] == split && r.d[cur->axis] < 0) )
+        {
+          near = cur->left;
+          far = cur->right;
+        }
+        else
+        {
+          near = cur->right;
+          far = cur->left;
+        }
+
+        bool near_only = tsplit >= tmax || tsplit <= 0;
+        bool far_only = tsplit <= tmin;
+
+        if( near_only ) stack.push( TraversalNode(near, tmin, tmax) );
+        else if( far_only ) stack.push( TraversalNode(far, tmin, tmax) );
+        else
+        {
+          stack.push( TraversalNode(far, tsplit, tmax) );
+          stack.push( TraversalNode(near, tmin, tsplit) );
+        }
+      }
+    }
+
+    //if we reached this point, no intersection closer than
+    //r(t) was found
+    return false;
+}
+
 bool KdNode::is_leaf() const { return left == NULL && right == NULL; }
 
 bool KdNode::should_split(const std::vector<AABB>& aabbs,

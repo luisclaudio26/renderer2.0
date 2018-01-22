@@ -39,6 +39,8 @@ public:
   KdTree tree;
 
   bool intersect(const Ray& r, Isect& target) const;
+  bool intersect(const Ray& r, float t) const;
+
   RGB sample_light(Vec3& pos, float& pdf) const;
   void preprocess();
 
