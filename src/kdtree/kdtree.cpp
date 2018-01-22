@@ -447,7 +447,7 @@ KdNode::KdNode(const std::vector<AABB>& aabbs,
 
 }
 
-void KdTree::build(const std::vector<Triangle>& prims)
+void KdTree::build(const std::vector<Triangle>& prims, AABB& bounds)
 {
   //this vector will contain indices to all primitives
   //we want to store inside the tree
@@ -459,6 +459,9 @@ void KdTree::build(const std::vector<Triangle>& prims)
   for(int i = 0; i < prims.size(); ++i)
     prims[i].aabb(aabbs[i]);
 
+  //bounding box for the whole scene
   AABB aabb; compute_aabb(aabbs, prims_ids, aabb);
+  bounds = aabb;
+
   root = KdNode(aabbs, prims_ids, aabb);
 }

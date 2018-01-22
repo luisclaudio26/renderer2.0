@@ -1,9 +1,6 @@
 #include "../../include/integrator/pathtracer.h"
 #include <glm/gtx/string_cast.hpp>
 
-//TODO: read this from file
-#define MAX_DEPTH 3
-
 static RGB sample_path(int path_length, const Scene& scene,
                         const Isect& first_isect, const Ray& eye_ray)
 {

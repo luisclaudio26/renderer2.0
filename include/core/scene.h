@@ -10,6 +10,11 @@
 #include "../kdtree/kdtree.h"
 #include "triangle.h"
 
+struct EnvironmentSphere
+{
+  float r; Vec3 c;
+};
+
 class Scene
 {
 private:
@@ -30,7 +35,9 @@ public:
   std::vector<Material::ptr> materials;
   std::vector<Texture::ptr> textures;
 
+  //Light sources
   std::vector<int> emissive;
+  EnvironmentSphere environment;
   float emissive_area;
 
   Camera::ptr cam;

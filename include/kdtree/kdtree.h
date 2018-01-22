@@ -37,7 +37,7 @@ private:
   KdNode root;
 
 public:
-  void build(const std::vector<Triangle>& prims);
+  void build(const std::vector<Triangle>& prims, AABB& bounds);
   bool intersect(const Ray& r, const std::vector<Triangle>& prims,
                   Isect& isect) const;
 
