@@ -33,7 +33,8 @@ void Scene::preprocess()
 RGB Scene::sample_light(Vec3& pos, float& pdf) const
 {
   //TODO; handle the case where there are no
-  //emissive primitives
+  //emissive primitives AND environment/infinite
+  //lights
   float i = rand() % emissive.size();
   float u = (float)rand() / RAND_MAX;
   float v = (float)rand() / RAND_MAX;

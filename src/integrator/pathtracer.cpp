@@ -51,14 +51,10 @@ static RGB sample_path(int path_length, const Scene& scene,
     scene.intersect(next_ri, V_isect);
 
     //if at this point we intersected no primitive, the contribution
-    //of this path will then depend of the background
-    //TODO: this makes paths of greater length contribute like paths
-    //of smaller length. for example: if we want to compute contribution
-    //of a path of length 4, if we exit in the first bounce because of this test
-    //we'll actually compute the contribution of a path of size 3!
-    if( !V_isect.is_valid() )
-      //return throughput * scene.bgd->sample( next_ri );
-      return RGB(0.f);
+    //of this path will be zero. previously we would return the background
+    //multiplied by the throughput, but this makes paths of length < i contribute
+    //with lighting as paths of length = i, which introduce bias.
+    if( !V_isect.is_valid() ) return RGB(0.f);
   }
 
   //the last vertex lies on an emissive primitive, so
@@ -109,9 +105,10 @@ RGB Pathtracer::integrate(const Vec2& uv, const Scene& scene) const
 
   for(int i = 1; ; ++i)
   {
+    //russian roulette
     float q = (float)rand()/RAND_MAX;
-    float p = eval_probs[i];
-    if(i > 5 || q > p) break;
+    float p = i > 5 ? 0.01f : eval_probs[i];
+    if(q > p) break;
     else path_p *= 1.0f / p;
 
     //sample_path gives us the path radiance weighted by the path's
