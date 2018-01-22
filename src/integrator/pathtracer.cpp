@@ -2,7 +2,7 @@
 #include <glm/gtx/string_cast.hpp>
 
 //TODO: read this from file
-#define PPP 35
+#define PPP 100
 #define MAX_DEPTH 3
 
 static RGB sample_path(int path_length, const Scene& scene,
@@ -27,30 +27,12 @@ static RGB sample_path(int path_length, const Scene& scene,
   //Ray-In always points to the intersection point.
   //remember to invert it when computing BSDFs!!!
   Ray ri = eye_ray;
+  Ray next_ri = eye_ray;
   Isect V_isect = first_isect;
 
   for(int i = 0; i < path_length-2; ++i)
   {
-    //compute closest intersection of ri
-    //and store it directly into V_isect
-    //If this is the first ray, we already
-    //know that V_isect = first_isect, so we
-    //can skip this
-    if(i > 0) scene.intersect(ri, V_isect);
-
-    //if at this point we intersected no primitive, the contribution
-    //of this path will then depend of the background
-    if( !V_isect.is_valid() )
-      return throughput * scene.bgd->sample( ri );
-
-    //TODO: on the last iteration, we don't need/can't
-    //sample BSDF, update throughput and ri, because
-    //we will compute direct illumination in the next
-    //step. as an advantage, ri will end up storing the
-    //ray ENTERING the surface on the last intersection
-    //point, so we can use it to compute the geometric
-    //coupling term in the direct illumination step.
-    if( i == path_length-3 ) break;
+    ri = next_ri;
 
     //sample BSDF to get the next direction. we are importance sampling
     //the BSDF here, trying to build a path of high contribution!
@@ -63,12 +45,20 @@ static RGB sample_path(int path_length, const Scene& scene,
     throughput *= cosO * brdf / wo_pdf;
 
     //ray for next iteration
-    ri = Ray( ri(V_isect.t) + V_isect.normal*0.00001f, wo);
+    Ray next_ri( ri(V_isect.t) + V_isect.normal*0.00001f, wo);
+
+    //compute closest intersection of ri
+    //and store it directly into V_isect
+    scene.intersect(next_ri, V_isect);
+
+    //if at this point we intersected no primitive, the contribution
+    //of this path will then depend of the background
+    if( !V_isect.is_valid() )
+      return throughput * scene.bgd->sample( next_ri );
   }
 
-  //TODO: there's a wrong detail: we must disable
-  //backface culling, otherwise rays which go through
-  //the objects will hit the light and be illuminated!
+  //TODO: as the environment light (aka background) is
+  //sampled only if some
 
   //the last vertex lies on an emissive primitive, so
   //we sample the light sources (this will change once
