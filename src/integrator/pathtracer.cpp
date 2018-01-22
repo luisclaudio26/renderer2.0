@@ -2,7 +2,6 @@
 #include <glm/gtx/string_cast.hpp>
 
 //TODO: read this from file
-#define PPP 100
 #define MAX_DEPTH 3
 
 static RGB sample_path(int path_length, const Scene& scene,
@@ -53,12 +52,14 @@ static RGB sample_path(int path_length, const Scene& scene,
 
     //if at this point we intersected no primitive, the contribution
     //of this path will then depend of the background
+    //TODO: this makes paths of greater length contribute like paths
+    //of smaller length. for example: if we want to compute contribution
+    //of a path of length 4, if we exit in the first bounce because of this test
+    //we'll actually compute the contribution of a path of size 3!
     if( !V_isect.is_valid() )
-      return throughput * scene.bgd->sample( next_ri );
+      //return throughput * scene.bgd->sample( next_ri );
+      return RGB(0.f);
   }
-
-  //TODO: as the environment light (aka background) is
-  //sampled only if some
 
   //the last vertex lies on an emissive primitive, so
   //we sample the light sources (this will change once
@@ -102,22 +103,22 @@ RGB Pathtracer::integrate(const Vec2& uv, const Scene& scene) const
   //No russian rouletting for now nor path reusing, we're
   //just estimating the contribution of the paths of
   //length i (L(p_i)), i <= max_length
-  RGB total_radiance(0.0f);
-  for(int i = 1; i <= MAX_DEPTH; ++i)
+  RGB total_radiance(0.0f); float path_p = 1.0f;
+
+  float eval_probs[] = {0.9f, 0.8f, 0.4f, 0.2f, 0.1f};
+
+  for(int i = 1; ; ++i)
   {
-    //contribution of path of length i
-    //this is simply a monte carlo integration!
-    RGB Li(0.0f);
+    float q = (float)rand()/RAND_MAX;
+    float p = eval_probs[i];
+    if(i > 5 || q > p) break;
+    else path_p *= 1.0f / p;
 
-    for(int j = 0; j < PPP; ++j)
-    {
-      //sample_path gives us the path radiance weighted by the path's
-      //probability, i.e. f(X)/p(X), so we can add it directly to Li
-      RGB path_radiance = sample_path(i, scene, first_isect, eye_ray);
-      Li += path_radiance;
-    }
+    //sample_path gives us the path radiance weighted by the path's
+    //probability, i.e. f(X)/p(X), so we can add it directly to Li
+    RGB path_radiance = sample_path(i, scene, first_isect, eye_ray);
 
-    total_radiance += (Li / (float)PPP);
+    total_radiance += path_p * path_radiance;
   }
 
   return total_radiance;

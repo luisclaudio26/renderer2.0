@@ -6,6 +6,7 @@
 #include <chrono>
 using namespace std::chrono;
 
+#define SPP 128
 static std::mutex mtx;
 static int n_threads;
 static float* progress_bar;
@@ -33,12 +34,25 @@ void Integrator::render_patch(ImageTools::RGBuchar* img, const Scene& scene,
 
       float u = (j - half_hRes)/ half_hRes;
       float v = (half_vRes - i)/ half_vRes;
+      float pixel_w = 1.0f / hRes, pixel_h = 1.0f / vRes;
 
       #ifdef DEBUG
       high_resolution_clock::time_point tS = high_resolution_clock::now();
       #endif
 
-      RGB sample = integrate(Vec2(u,v), scene);
+      RGB sample_acc(0.f);
+      for(int s = 0; s < SPP; ++s)
+      {
+        //uniform sampling within pixel area
+        float p = (float)rand()/RAND_MAX;
+        float q = (float)rand()/RAND_MAX;
+
+        float u_ = u + p*pixel_w;
+        float v_ = v + q*pixel_h;
+
+        sample_acc += integrate(Vec2(u_,v_), scene);
+      }
+      RGB sample = sample_acc / (float)SPP;
 
       #ifdef DEBUG
       high_resolution_clock::time_point tE = high_resolution_clock::now();
