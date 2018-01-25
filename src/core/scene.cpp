@@ -1,4 +1,5 @@
 #include "../../include/core/scene.h"
+#include <glm/gtx/string_cast.hpp>
 #include <cfloat>
 #include <cstdio>
 
@@ -32,15 +33,15 @@ void Scene::preprocess()
   printf("%lu emissive primitives\n", emissive.size());
 
   //compute environment sphere
-  float longest = -FLT_MAX;
-  for(int i = 0; i < 3; ++i)
-  {
-    float span = aabb.max[i] - aabb.min[i];
-    if( span > longest ) longest = span;
-  }
-
   environment.c = (aabb.min + aabb.max) * 0.5f;
-  environment.r = longest * 0.5f;
+
+  float span = std::max(aabb.max[0]-aabb.min[0],
+                        std::max(aabb.max[1]-aabb.min[1],
+                                  aabb.max[2]-aabb.min[2]));
+  environment.r = span * 1.44f; //TODO: why are primitives falling beyond
+                                //the [min, max] range?!
+
+
   emissive_area += 12.566370f*environment.r*environment.r; //4PI = 12.566...
 }
 
@@ -49,6 +50,8 @@ RGB Scene::sample_light(Vec3& pos, float& pdf) const
   //TODO; handle the case where there are no
   //emissive primitives AND environment/infinite
   //lights
+  if( emissive.empty() ) return RGB(0.f);
+
   float i = rand() % emissive.size() + 1;
   RGB out;
 
@@ -82,20 +85,15 @@ RGB Scene::sample_light(Vec3& pos, float& pdf) const
 
 RGB Scene::eval_environment(const Ray& r, Isect& isect) const
 {
-  float t1, t2;
-  Vec3 x = environment.c - r.o;
-  float a = glm::dot(r.d, r.d);
+  Vec3 x = r.o - environment.c;
+  float a = 1.0f; //glm::dot(r.d, r.d);
   float b = 2 * glm::dot(x, r.d);
   float c = glm::dot(x,x) - environment.r * environment.r;
 
-  float delta = b*b - 4*a*c;
-  //t1 = (-b - sqrtf(delta)) / (2*a);
-  t2 = (-b + sqrtf(delta)) / (2*a);
-
-  //get positive intersection. as the ray's origin is always
-  //inside the sphere, we probably need to compute t2 only
-  //TODO: test this!
-  float t = t2;
+  //as the ray's origin is always inside the sphere,
+  //we need to compute the positive root only!
+  float delta = b*b - 4*c;
+  float t = (-b + sqrtf(delta)) * 0.5f;
 
   isect.normal = glm::normalize( r(t) - environment.c );
   isect.uv = Vec2(0.5f, 0.5f); //TODO: implement this correctly

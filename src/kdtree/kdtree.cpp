@@ -23,6 +23,7 @@ static void compute_aabb(const std::vector<AABB>& aabbs,
       target.max[i] = std::fmax(p_aabb.max[i], target.max[i]);
     }
   }
+
 }
 
 struct Edge

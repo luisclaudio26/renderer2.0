@@ -6,7 +6,7 @@
 #include <chrono>
 using namespace std::chrono;
 
-#define SPP 32
+#define SPP 128
 static std::mutex mtx;
 static int n_threads;
 static float* progress_bar;
@@ -34,7 +34,7 @@ void Integrator::render_patch(ImageTools::RGBuchar* img, const Scene& scene,
 
       float u = (j - half_hRes)/ half_hRes;
       float v = (half_vRes - i)/ half_vRes;
-      float pixel_w = 1.0f / hRes, pixel_h = 1.0f / vRes;
+      float pixel_w = 2.0f / hRes, pixel_h = 2.0f / vRes;
 
       #ifdef DEBUG
       high_resolution_clock::time_point tS = high_resolution_clock::now();

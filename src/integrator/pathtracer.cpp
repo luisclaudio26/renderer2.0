@@ -55,9 +55,11 @@ static RGB sample_bsdf(const Scene& scene, const Isect& isect,
     else return RGB(0.f);
   }
   else
+  {
     //no intersection means that the ray escaped the scene
     //and thus we must sample the environment light
     Le = scene.eval_environment(new_ray, new_isect);
+  }
 
   //G: geometric coupling term
   float cosI = glm::dot(last_ray.d, isect.normal);
@@ -134,10 +136,12 @@ static RGB sample_path(int path_length, const Scene& scene,
   float bsdf_pdf;
   RGB BSDF = sample_bsdf(scene, V_isect, ri, bsdf_pdf);
 
+  //multiple importance sampling using Balance heuristics
+  RGB total = (DI*light_pdf + BSDF*bsdf_pdf) / (light_pdf + bsdf_pdf);
 
+  //printf("%f, %f | ", light_pdf, bsdf_pdf);
 
-
-  return BSDF * throughput;
+  return total * throughput;
 }
 
 RGB Pathtracer::integrate(const Vec2& uv, const Scene& scene) const
