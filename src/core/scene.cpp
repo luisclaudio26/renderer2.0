@@ -34,13 +34,7 @@ void Scene::preprocess()
 
   //compute environment sphere
   environment.c = (aabb.min + aabb.max) * 0.5f;
-
-  float span = std::max(aabb.max[0]-aabb.min[0],
-                        std::max(aabb.max[1]-aabb.min[1],
-                                  aabb.max[2]-aabb.min[2]));
-  environment.r = span * 1.44f; //TODO: why are primitives falling beyond
-                                //the [min, max] range?!
-
+  environment.r = (environment.c - aabb.max).length();
 
   emissive_area += 12.566370f*environment.r*environment.r; //4PI = 12.566...
 }
@@ -81,24 +75,4 @@ RGB Scene::sample_light(Vec3& pos, float& pdf) const
 
   pdf = 1 / emissive_area;
   return out;
-}
-
-RGB Scene::eval_environment(const Ray& r, Isect& isect) const
-{
-  Vec3 x = r.o - environment.c;
-  float a = 1.0f; //glm::dot(r.d, r.d);
-  float b = 2 * glm::dot(x, r.d);
-  float c = glm::dot(x,x) - environment.r * environment.r;
-
-  //as the ray's origin is always inside the sphere,
-  //we need to compute the positive root only!
-  float delta = b*b - 4*c;
-  float t = (-b + sqrtf(delta)) * 0.5f;
-
-  isect.normal = glm::normalize( r(t) - environment.c );
-  isect.uv = Vec2(0.5f, 0.5f); //TODO: implement this correctly
-  isect.t = t;
-  isect.material = NULL;
-
-  return RGB(0.3f, 0.3f, 0.3f);
 }

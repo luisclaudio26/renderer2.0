@@ -40,6 +40,8 @@ static RGB sample_bsdf(const Scene& scene, const Isect& isect,
   isect.material->sample_BSDF(isect.uv, -last_ray, isect.normal,
                                 bsdf_dir, bsdf_pdf, f);
 
+
+
   //trace ray in this new direction and check whether we intersect
   //any light source
   Ray new_ray(last_ray(isect.t)+isect.normal*0.000001f, bsdf_dir);
@@ -58,7 +60,8 @@ static RGB sample_bsdf(const Scene& scene, const Isect& isect,
   {
     //no intersection means that the ray escaped the scene
     //and thus we must sample the environment light
-    Le = scene.eval_environment(new_ray, new_isect);
+    Le = scene.bgd->sample(new_ray);
+    new_isect.t = scene.environment.r;
   }
 
   //G: geometric coupling term
@@ -138,8 +141,6 @@ static RGB sample_path(int path_length, const Scene& scene,
 
   //multiple importance sampling using Balance heuristics
   RGB total = (DI*light_pdf + BSDF*bsdf_pdf) / (light_pdf + bsdf_pdf);
-
-  //printf("%f, %f | ", light_pdf, bsdf_pdf);
 
   return total * throughput;
 }
