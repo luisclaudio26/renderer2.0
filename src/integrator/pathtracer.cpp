@@ -1,6 +1,78 @@
 #include "../../include/integrator/pathtracer.h"
 #include <glm/gtx/string_cast.hpp>
 
+static RGB sample_light(const Scene& scene, const Isect& isect,
+                          const Ray& last_ray, float& pdf)
+{
+  //sample light source. SCENE is responsible for importance sampling
+  //lights according to radiance
+  Vec3 light_pos; float light_pdf;
+  RGB Le = scene.sample_light(light_pos, light_pdf);
+
+  Vec3 V = last_ray(isect.t);
+  Vec3 v2l = light_pos - V;
+  float dist = glm::length(v2l);
+  Vec3 wo = glm::normalize(v2l);
+
+  //check visibility. If not visible, path contribution is zero!
+  //the outgoing ray intersects the light sample at t = d!
+  if( scene.intersect(Ray(V+isect.normal*0.00001f, wo), dist) )
+    return RGB(0.f);
+
+  //G: geometric coupling term
+  float cosI = glm::dot(last_ray.d, isect.normal);
+  float cosO = glm::dot(wo, isect.normal);
+  float G = std::fabs(cosI*cosO) / (dist*dist);
+
+  //this will cause problems with specular materials (i.e. delta BSDFs)
+  RGB f = isect.material->sample(last_ray.d, wo, isect.normal, isect.uv);
+
+  //contribution of this sample
+  pdf = light_pdf;
+  return Le * f * (G/light_pdf);
+}
+
+static RGB sample_bsdf(const Scene& scene, const Isect& isect,
+                        const Ray& last_ray, float& pdf)
+{
+  //sample BSDF of the intersection
+  Vec3 bsdf_dir; float bsdf_pdf; RGB f;
+  isect.material->sample_BSDF(isect.uv, -last_ray, isect.normal,
+                                bsdf_dir, bsdf_pdf, f);
+
+  //trace ray in this new direction and check whether we intersect
+  //any light source
+  Ray new_ray(last_ray(isect.t)+isect.normal*0.000001f, bsdf_dir);
+  Isect new_isect; RGB Le(0.0f);
+
+  if( scene.intersect(new_ray, new_isect) )
+  {
+    //we could just set Le = emissivity and the results
+    //would be correct if emissivity = 0.0f, but we don't
+    //want to go through all the computations in the end
+    if( new_isect.material->is_emissive() )
+      Le = new_isect.material->emissivity();
+    else return RGB(0.f);
+  }
+  else
+    //no intersection means that the ray escaped the scene
+    //and thus we must sample the environment light
+    Le = scene.eval_environment(new_ray, new_isect);
+
+  //G: geometric coupling term
+  float cosI = glm::dot(last_ray.d, isect.normal);
+  float cosO = glm::dot(new_ray.d, isect.normal);
+  float dist2 = new_isect.t * new_isect.t; //the ray direction is normalized,
+                                            //so the distance between its origin
+                                            //and the intersection point is t
+
+  float G = std::fabs(cosI*cosO) / dist2;
+
+  //return contribution of this sample
+  pdf = bsdf_pdf;
+  return Le * f * (G/bsdf_pdf);
+}
+
 static RGB sample_path(int path_length, const Scene& scene,
                         const Isect& first_isect, const Ray& eye_ray)
 {
@@ -54,34 +126,18 @@ static RGB sample_path(int path_length, const Scene& scene,
     if( !V_isect.is_valid() ) return RGB(0.f);
   }
 
-  //the last vertex lies on an emissive primitive, so
-  //we sample the light sources (this will change once
-  //we implement multiple importance sampling)
-  //TODO: for specular materials, sample BSDF
-  Vec3 light_pos; float light_pdf;
-  RGB Le = scene.sample_light(light_pos, light_pdf);
+  //Light sampling
+  float light_pdf;
+  RGB DI = sample_light(scene, V_isect, ri, light_pdf);
 
-  Vec3 V = ri(V_isect.t);
-  float d = glm::length(light_pos - V);
-  Vec3 wo = glm::normalize(light_pos - V);
+  //BSDF sampling
+  float bsdf_pdf;
+  RGB BSDF = sample_bsdf(scene, V_isect, ri, bsdf_pdf);
 
-  //check visibility. If not visible, path contribution is zero!
-  //the outgoing ray intersects the light sample at t = d!
-  if( scene.intersect(Ray(V+V_isect.normal*0.00001f, wo), d) )
-    return RGB(0.f);
 
-  //G: geometric coupling term
-  float cosI = glm::dot(ri.d, V_isect.normal);
-  float cosO = glm::dot(wo, V_isect.normal);
-  float G = std::fabs(cosI*cosO) / (d*d);
 
-  //this will cause problems with specular materials (i.e. delta BSDFs)
-  RGB f = V_isect.material->sample(ri.d, wo, V_isect.normal, V_isect.uv);
 
-  //add contribution of the last bounce to the throughput
-  throughput *= (G/light_pdf) * f;
-
-  return Le * throughput;
+  return BSDF * throughput;
 }
 
 RGB Pathtracer::integrate(const Vec2& uv, const Scene& scene) const

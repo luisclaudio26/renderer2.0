@@ -79,3 +79,28 @@ RGB Scene::sample_light(Vec3& pos, float& pdf) const
   pdf = 1 / emissive_area;
   return out;
 }
+
+RGB Scene::eval_environment(const Ray& r, Isect& isect) const
+{
+  float t1, t2;
+  Vec3 x = environment.c - r.o;
+  float a = glm::dot(r.d, r.d);
+  float b = 2 * glm::dot(x, r.d);
+  float c = glm::dot(x,x) - environment.r * environment.r;
+
+  float delta = b*b - 4*a*c;
+  //t1 = (-b - sqrtf(delta)) / (2*a);
+  t2 = (-b + sqrtf(delta)) / (2*a);
+
+  //get positive intersection. as the ray's origin is always
+  //inside the sphere, we probably need to compute t2 only
+  //TODO: test this!
+  float t = t2;
+
+  isect.normal = glm::normalize( r(t) - environment.c );
+  isect.uv = Vec2(0.5f, 0.5f); //TODO: implement this correctly
+  isect.t = t;
+  isect.material = NULL;
+
+  return RGB(0.3f, 0.3f, 0.3f);
+}
