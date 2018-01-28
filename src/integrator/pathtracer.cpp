@@ -155,8 +155,7 @@ static RGB sample_path(int path_length, const Scene& scene,
 
   //printf("%f, %s ---- %f, %s -> %s\n", glm::to_string(DI).c_str(), light_pdf, glm::to_string(BSDF).c_str(), bsdf_pdf, glm::to_string(total).c_str());
 
-  //return total * throughput;
-  return total;
+  return total * throughput;
 }
 
 RGB Pathtracer::integrate(const Vec2& uv, const Scene& scene) const
