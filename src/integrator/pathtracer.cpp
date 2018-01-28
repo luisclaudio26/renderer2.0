@@ -111,30 +111,29 @@ static RGB sample_path(int path_length, const Scene& scene,
 
   for(int i = 0; i < path_length-2; ++i)
   {
-    ri = next_ri;
-
     //sample BSDF to get the next direction. we are importance sampling
     //the BSDF here, trying to build a path of high contribution!
     Vec3 wo; float wo_pdf; RGB brdf;
     V_isect.tri->material->sample_BSDF(V_isect.uv, ri, V_isect.normal,
-                                    wo, wo_pdf, brdf);
+                                        wo, wo_pdf, brdf);
 
     //update throughput
     float cosO = std::fabs(glm::dot(wo, V_isect.normal));
     throughput *= cosO * brdf / wo_pdf;
 
     //ray for next iteration
-    Ray next_ri( ri(V_isect.t) + V_isect.normal*0.00001f, wo);
+    next_ri = Ray( ri(V_isect.t) + V_isect.normal*0.00001f, wo);
 
     //compute closest intersection of ri
     //and store it directly into V_isect
-    scene.intersect(next_ri, V_isect);
+    if( !scene.intersect(next_ri, V_isect) ) return RGB(0.f);
+    else ri = next_ri;
 
     //if at this point we intersected no primitive, the contribution
     //of this path will be zero. previously we would return the background
     //multiplied by the throughput, but this makes paths of length < i contribute
     //with lighting as paths of length = i, which introduce bias.
-    if( !V_isect.is_valid() ) return RGB(0.f);
+    //if( !V_isect.is_valid() ) return RGB(0.f);
   }
 
   //Light sampling
@@ -146,19 +145,18 @@ static RGB sample_path(int path_length, const Scene& scene,
   RGB BSDF = sample_bsdf(scene, V_isect, ri, bsdf_pdf);
 
   //multiple importance sampling using Balance heuristics
-  float inv_pdfs = 1.0f / (light_pdf + bsdf_pdf);
-  float light_w = light_pdf * inv_pdfs;
-  float bsdf_w = bsdf_pdf * inv_pdfs;
-
   //TODO: review this! PBRT implementation doesn't match
   //the definition of MIS, which is:
   // f(X)g(X)w(X)/p(X) for the contribution of sample X.
   //Why aren't we multiplying the two f and g, or are we doing
   //this implicitly? If we are doing this implicitly, this
   //estimate is correct (and it actually looks good)
-  RGB total = (DI + BSDF) * inv_pdfs;
+  RGB total = (DI + BSDF) / (light_pdf + bsdf_pdf);
 
-  return total * throughput;
+  //printf("%f, %s ---- %f, %s -> %s\n", glm::to_string(DI).c_str(), light_pdf, glm::to_string(BSDF).c_str(), bsdf_pdf, glm::to_string(total).c_str());
+
+  //return total * throughput;
+  return total;
 }
 
 RGB Pathtracer::integrate(const Vec2& uv, const Scene& scene) const
