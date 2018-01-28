@@ -26,15 +26,9 @@ static RGB sample_light(const Scene& scene, const Isect& isect,
   //primitive is occluded!
   if( light_isect.tri != tri ) return RGB(0.f);
 
-  //G: geometric coupling term
-  //TODO: no PBRT as luzes são amostradas e depois a PDF é
-  //transformada para ângulo sólido, o que significa que não
-  //é necessário computar termo de acoplamento geométrico.
-  //Isso facilita a implementação do integrador, pois o último
-  //bounce não tem que ser diferente dos anteriores
   float cosSNl = glm::dot(-wo, light_isect.normal); //Shadow ray and
-                                                    //Normal at Light surface
-  float r2 = dist*dist;
+  float r2 = dist*dist;                             //Normal at Light surface
+
 
   //convert from area to solid angle probability
   pdf = light_pdf * (r2 / cosSNl);
@@ -67,6 +61,9 @@ static RGB sample_bsdf(const Scene& scene, const Isect& isect,
     //we could just set Le = emissivity and the results
     //would be correct if emissivity = 0.0f, but we don't
     //want to go through all the computations in the end
+    //TODO: I think we need to compute the probability
+    //(in solid angle) of this emissive primitive (just as in Mitsuba),
+    //so we correctly evaluate Multiple Importance Sampling.
     if( new_isect.tri->material->is_emissive() )
       Le = new_isect.tri->material->emissivity();
     else return RGB(0.f);
@@ -126,14 +123,12 @@ static RGB sample_path(int path_length, const Scene& scene,
 
     //compute closest intersection of ri
     //and store it directly into V_isect
-    if( !scene.intersect(next_ri, V_isect) ) return RGB(0.f);
-    else ri = next_ri;
-
     //if at this point we intersected no primitive, the contribution
     //of this path will be zero. previously we would return the background
     //multiplied by the throughput, but this makes paths of length < i contribute
     //with lighting as paths of length = i, which introduce bias.
-    //if( !V_isect.is_valid() ) return RGB(0.f);
+    if( !scene.intersect(next_ri, V_isect) ) return RGB(0.f);
+    else ri = next_ri;
   }
 
   //Light sampling
@@ -152,8 +147,6 @@ static RGB sample_path(int path_length, const Scene& scene,
   //this implicitly? If we are doing this implicitly, this
   //estimate is correct (and it actually looks good)
   RGB total = (DI + BSDF) / (light_pdf + bsdf_pdf);
-
-  //printf("%f, %s ---- %f, %s -> %s\n", glm::to_string(DI).c_str(), light_pdf, glm::to_string(BSDF).c_str(), bsdf_pdf, glm::to_string(total).c_str());
 
   return total * throughput;
 }
