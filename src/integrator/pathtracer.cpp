@@ -4,10 +4,12 @@
 static RGB sample_light(const Scene& scene, const Isect& isect,
                           const Ray& last_ray, float& pdf)
 {
+  pdf = 0.0f;
+
   //sample light source. SCENE is responsible for importance sampling
   //lights according to radiance
-  Vec3 light_pos; float light_pdf;
-  RGB Le = scene.sample_light(light_pos, light_pdf);
+  Vec3 light_pos; float light_pdf; const Triangle* tri = NULL;
+  RGB Le = scene.sample_light(light_pos, light_pdf, &tri);
 
   Vec3 V = last_ray(isect.t);
   Vec3 v2l = light_pos - V;
@@ -16,20 +18,33 @@ static RGB sample_light(const Scene& scene, const Isect& isect,
 
   //check visibility. If not visible, path contribution is zero!
   //the outgoing ray intersects the light sample at t = d!
-  if( scene.intersect(Ray(V+isect.normal*0.00001f, wo), dist) )
-    return RGB(0.f);
+  //We KNOW that the ray will intersect at least the light, so we don't need
+  //to assert that the ray hasn't escaped
+  Ray shadow(V+isect.normal*0.00001f, wo); Isect light_isect;
+  scene.intersect( shadow, light_isect );
+
+  //primitive is occluded!
+  if( light_isect.tri != tri ) return RGB(0.f);
 
   //G: geometric coupling term
-  float cosI = glm::dot(last_ray.d, isect.normal);
-  float cosO = glm::dot(wo, isect.normal);
-  float G = std::fabs(cosI*cosO) / (dist*dist);
+  //TODO: no PBRT as luzes são amostradas e depois a PDF é
+  //transformada para ângulo sólido, o que significa que não
+  //é necessário computar termo de acoplamento geométrico.
+  //Isso facilita a implementação do integrador, pois o último
+  //bounce não tem que ser diferente dos anteriores
+  float cosSNl = glm::dot(-wo, light_isect.normal); //Shadow ray and
+                                                    //Normal at Light surface
+  float r2 = dist*dist;
+
+  //convert from area to solid angle probability
+  pdf = light_pdf * (r2 / cosSNl);
 
   //this will cause problems with specular materials (i.e. delta BSDFs)
-  RGB f = isect.material->sample(last_ray.d, wo, isect.normal, isect.uv);
+  RGB f = isect.tri->material->sample(last_ray.d, wo, isect.normal, isect.uv);
+  float cosSNi = glm::dot(wo, isect.normal);
 
   //contribution of this sample
-  pdf = light_pdf;
-  return Le * f * (G/light_pdf);
+  return Le * f * cosSNi;
 }
 
 static RGB sample_bsdf(const Scene& scene, const Isect& isect,
@@ -37,10 +52,10 @@ static RGB sample_bsdf(const Scene& scene, const Isect& isect,
 {
   //sample BSDF of the intersection
   Vec3 bsdf_dir; float bsdf_pdf; RGB f;
-  isect.material->sample_BSDF(isect.uv, -last_ray, isect.normal,
+  isect.tri->material->sample_BSDF(isect.uv, -last_ray, isect.normal,
                                 bsdf_dir, bsdf_pdf, f);
 
-
+  pdf = bsdf_pdf;
 
   //trace ray in this new direction and check whether we intersect
   //any light source
@@ -52,8 +67,8 @@ static RGB sample_bsdf(const Scene& scene, const Isect& isect,
     //we could just set Le = emissivity and the results
     //would be correct if emissivity = 0.0f, but we don't
     //want to go through all the computations in the end
-    if( new_isect.material->is_emissive() )
-      Le = new_isect.material->emissivity();
+    if( new_isect.tri->material->is_emissive() )
+      Le = new_isect.tri->material->emissivity();
     else return RGB(0.f);
   }
   else
@@ -61,21 +76,12 @@ static RGB sample_bsdf(const Scene& scene, const Isect& isect,
     //no intersection means that the ray escaped the scene
     //and thus we must sample the environment light
     Le = scene.bgd->sample(new_ray);
-    new_isect.t = scene.environment.r;
   }
 
-  //G: geometric coupling term
-  float cosI = glm::dot(last_ray.d, isect.normal);
   float cosO = glm::dot(new_ray.d, isect.normal);
-  float dist2 = new_isect.t * new_isect.t; //the ray direction is normalized,
-                                            //so the distance between its origin
-                                            //and the intersection point is t
-
-  float G = std::fabs(cosI*cosO) / dist2;
 
   //return contribution of this sample
-  pdf = bsdf_pdf;
-  return Le * f * (G/bsdf_pdf);
+  return Le * f * cosO;
 }
 
 static RGB sample_path(int path_length, const Scene& scene,
@@ -84,7 +90,7 @@ static RGB sample_path(int path_length, const Scene& scene,
   //"Base case" : path = 1 means we return the emissivity
   //of the first object encountered
   if( path_length == 1 )
-    return first_isect.material->emissivity();
+    return first_isect.tri->material->emissivity();
 
   //path throughput includes the computation of the path sampling
   //probability, as at each step we divide it by the probability
@@ -110,7 +116,7 @@ static RGB sample_path(int path_length, const Scene& scene,
     //sample BSDF to get the next direction. we are importance sampling
     //the BSDF here, trying to build a path of high contribution!
     Vec3 wo; float wo_pdf; RGB brdf;
-    V_isect.material->sample_BSDF(V_isect.uv, ri, V_isect.normal,
+    V_isect.tri->material->sample_BSDF(V_isect.uv, ri, V_isect.normal,
                                     wo, wo_pdf, brdf);
 
     //update throughput
@@ -140,7 +146,17 @@ static RGB sample_path(int path_length, const Scene& scene,
   RGB BSDF = sample_bsdf(scene, V_isect, ri, bsdf_pdf);
 
   //multiple importance sampling using Balance heuristics
-  RGB total = (DI*light_pdf + BSDF*bsdf_pdf) / (light_pdf + bsdf_pdf);
+  float inv_pdfs = 1.0f / (light_pdf + bsdf_pdf);
+  float light_w = light_pdf * inv_pdfs;
+  float bsdf_w = bsdf_pdf * inv_pdfs;
+
+  //TODO: review this! PBRT implementation doesn't match
+  //the definition of MIS, which is:
+  // f(X)g(X)w(X)/p(X) for the contribution of sample X.
+  //Why aren't we multiplying the two f and g, or are we doing
+  //this implicitly? If we are doing this implicitly, this
+  //estimate is correct (and it actually looks good)
+  RGB total = (DI + BSDF) * inv_pdfs;
 
   return total * throughput;
 }

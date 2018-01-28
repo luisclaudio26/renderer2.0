@@ -39,40 +39,34 @@ void Scene::preprocess()
   emissive_area += 12.566370f*environment.r*environment.r; //4PI = 12.566...
 }
 
-RGB Scene::sample_light(Vec3& pos, float& pdf) const
+RGB Scene::sample_light(Vec3& pos, float& pdf, const Triangle** prim) const
 {
   //TODO; handle the case where there are no
   //emissive primitives AND environment/infinite
   //lights
-  if( emissive.empty() ) return RGB(0.f);
 
-  float i = rand() % emissive.size() + 1;
-  RGB out;
-
-  //the last primitive is the environment light
-  if( i == emissive.size() )
+  //TODO: no PBRT, o light_pdf já é calculado em relação a ângulo sólido,
+  //o que significa que (1) a distância da esfera de environment light
+  //NÃO importa, já que não é necessário calcular termo de acoplamento
+  //geométrico
+  if( emissive.empty() )
   {
-    //sample point on the sphere surface
-    float u = 2.0f * ((float)rand()/RAND_MAX) - 1.0f;
-    float v = 2.0f * ((float)rand()/RAND_MAX) - 1.0f;
-    float w = 2.0f * ((float)rand()/RAND_MAX) - 1.0f;
-
-    Vec3 d = glm::normalize( Vec3(u, v, w) );
-    pos = environment.c + environment.r * d;
-    out = bgd->sample( Ray(environment.c, d) );
-  }
-  else
-  {
-    float u = (float)rand() / RAND_MAX;
-    float v = (float)rand() / RAND_MAX;
-    float w = 1 - u - v;
-
-    const Triangle& t = prims[emissive[i]];
-
-    pos = u*t.v[0] + v*t.v[1] + w*t.v[2];
-    out = t.material->emissivity();
+    pdf = 1.0f; //??
+    prim = NULL;
+    return RGB(0.f);
   }
 
-  pdf = 1 / emissive_area;
-  return out;
+  int i = rand() % emissive.size();
+  float u = (float)rand() / RAND_MAX;
+  float v = (float)rand() / RAND_MAX;
+  float w = 1 - u - v;
+
+  const Triangle& t = prims[emissive[i]];
+
+  pos = u*t.v[0] + v*t.v[1] + w*t.v[2];
+  pdf = 1.0f / t.area();
+  *prim = &t;
+
+  //emissivity * 1/pdf, where 1/pdf = 1/(1/size) = size
+  return t.material->emissivity() * (float)emissive.size();
 }

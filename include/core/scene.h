@@ -48,7 +48,7 @@ public:
   bool intersect(const Ray& r, Isect& target) const;
   bool intersect(const Ray& r, float t) const;
 
-  RGB sample_light(Vec3& pos, float& pdf) const;
+  RGB sample_light(Vec3& pos, float& pdf, const Triangle** prim) const;
   void preprocess();
 
   Scene() : emissive_area(0.f) {}

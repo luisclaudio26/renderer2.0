@@ -4,12 +4,15 @@
 #include "material.h"
 #include "geometry.h"
 
-//record info on an intersection event
+//forward declare triangle to avoid circularity, as triangle itself
+//needs to know Isect for its intersect() method
+class Triangle;
+
 class Isect
 {
 public:
+  const Triangle* tri; //DO NOT DELETE THIS POINTER!!!
   float t;
-  Material::ptr material;
   Vec3 normal;
   Vec2 uv; //UV coordinates of the intersection point
 
