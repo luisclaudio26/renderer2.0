@@ -1,5 +1,6 @@
 #include "../../include/integrator/pathtracer.h"
 #include <glm/gtx/string_cast.hpp>
+#include <cmath>
 
 static RGB sample_light(const Scene& scene, const Isect& isect,
                           const Ray& last_ray, float& pdf)
@@ -29,6 +30,9 @@ static RGB sample_light(const Scene& scene, const Isect& isect,
   float cosSNl = glm::dot(-wo, light_isect.normal); //Shadow ray and
   float r2 = dist*dist;                             //Normal at Light surface
 
+  //if ray is perpendicular to the normal, cosSNl = 0.
+  //this makes pdf = INF, but apparently this is no problem
+  //because k/INF = 0, so this sample won't be actually used
 
   //convert from area to solid angle probability
   pdf = light_pdf * (r2 / cosSNl);
@@ -86,6 +90,7 @@ static RGB sample_path(int path_length, const Scene& scene,
 {
   //"Base case" : path = 1 means we return the emissivity
   //of the first object encountered
+  //TODO: probability of sampling this point?
   if( path_length == 1 )
     return first_isect.tri->material->emissivity();
 
@@ -160,18 +165,14 @@ RGB Pathtracer::integrate(const Vec2& uv, const Scene& scene) const
   if( !scene.intersect(eye_ray, first_isect) )
     return scene.bgd->sample(eye_ray);
 
-  //No russian rouletting for now nor path reusing, we're
-  //just estimating the contribution of the paths of
-  //length i (L(p_i)), i <= max_length
   RGB total_radiance(0.0f); float path_p = 1.0f;
-
-  float eval_probs[] = {0.9f, 0.8f, 0.4f, 0.2f, 0.1f};
+  float eval_probs[] = {0.9f, 0.8f, 0.4f, 0.2f, 0.1f};  
 
   for(int i = 1; ; ++i)
   {
     //russian roulette
     float q = (float)rand()/RAND_MAX;
-    float p = i > 5 ? 0.01f : eval_probs[i];
+    float p = i > 5 ? 0.01f : eval_probs[i-1];
     if(q > p) break;
     else path_p *= 1.0f / p;
 

@@ -40,6 +40,9 @@ void Integrator::render_patch(ImageTools::RGBuchar* img, const Scene& scene,
       high_resolution_clock::time_point tS = high_resolution_clock::now();
       #endif
 
+      //TODO: some pixels end up inevitably with values > 1.0,
+      //resulting in salt-and-pepper like noise. is this common
+      //in path tracers? How to better deal with these values?
       RGB sample_acc(0.f);
       for(int s = 0; s < SPP; ++s)
       {
