@@ -17,8 +17,9 @@ static FREE_IMAGE_FORMAT fif_from_str(const std::string& ext)
 //--------------------------------------
 RGB ImageTexture::sample(const Vec2& uv) const
 {
-  //wrap texture coordinates
-  Vec2 uv_ = glm::repeat(uv);
+  //wrap texture coordinates.
+  //Vec2 uv_ = glm::repeat(uv); -> BROKEN, for some reason
+  Vec2 uv_ = uv - glm::floor(uv); //this should take the fractional part of uv
 
   int i = (uv_.y == 1.0f) ? h-1 : uv_.y*h;
   int j = (uv_.x == 1.0f) ? w-1 : uv_.x*w;

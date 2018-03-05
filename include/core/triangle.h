@@ -15,7 +15,7 @@ public:
   void transform(const Mat4& T)
   {
     for(int i = 0; i < 3; ++i)
-      v[i] = T * Vec4(v[i], 1.0f);
+      v[i] = Vec3(T * Vec4(v[i], 1.0f));
   }
 
   void intersect(const Ray& ray, Isect& isect, bool bf_cull = true) const;
