@@ -59,7 +59,7 @@ RGB Scene::sample_light(Vec3& pos, float& pdf, const Triangle** prim) const
   int i = rand() % emissive.size();
   float u = (float)rand() / RAND_MAX;
   float v = (float)rand() / RAND_MAX;
-  float w = 1 - u - v;
+  float w = 1 - u - v; //TODO: w may be negative! this is wrong
 
   const Triangle& t = prims[emissive[i]];
 
