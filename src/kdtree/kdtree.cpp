@@ -156,6 +156,11 @@ bool KdTree::intersect(const Ray& r, const std::vector<Triangle>& prims,
     const KdNode* cur = tn.node;
     float tmin = tn.tmin, tmax = tn.tmax;
 
+    //we can exit here because in this case we can guarantee that no
+    //intersetion will happen closer than isect (because they will forcely
+    //happen beyond tmin) 
+    if( isect.t < tmin ) break;
+
     if( cur->is_leaf() )
     {
       for(auto id : cur->prims_ids)
@@ -170,7 +175,10 @@ bool KdTree::intersect(const Ray& r, const std::vector<Triangle>& prims,
         }
       }
 
-      if(hit) break;
+      //we can't exit now because this intersection may be outside the
+      //bounding box and thus another primitive inside one of the boxes
+      //behind might contain a closer intersection
+      //-- if(hit) break;
     }
     else
     {
