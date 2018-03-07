@@ -22,25 +22,13 @@ static RGB sample_light(const Scene& scene, const Isect& isect,
   //We KNOW that the ray will intersect at least the light, so we don't need
   //to assert that the ray hasn't escaped
   Ray shadow(V+isect.normal*0.00001f, wo); Isect light_isect;
-  //scene.intersect( shadow, light_isect );
-
-  RGB v = 0.5f*(RGB(isect.normal) + RGB(1.0f));
-  /*
-  if( scene.intersect( shadow, dist ) )
-    v = RGB(1.0f, 0.0f, 0.0f);
-  else
-    v = RGB(0.0f, 0.0f, 0.0f);
-  */
+  scene.intersect( shadow, light_isect );
 
   //primitive is occluded!
   //TODO: handle the case where no intersection is found!
-  /*
-  RGB v;
-  if( light_isect.is_valid() && light_isect.t > dist )
-    v = RGB(light_isect.t - dist, 0.0f, 0.0f);
-  else
-    v = RGB(0.0f, 0.0f, 1.0f);
-  */
+  if( !light_isect.is_valid() ||
+      (light_isect.is_valid() && light_isect.tri != tri) )
+      return RGB(0.f);
 
   float cosSNl = glm::dot(-wo, light_isect.normal); //Shadow ray and
   float r2 = dist*dist;                             //Normal at Light surface
@@ -57,8 +45,7 @@ static RGB sample_light(const Scene& scene, const Isect& isect,
   float cosSNi = glm::dot(wo, isect.normal);
 
   //contribution of this sample
-  //return (1.0f, 1.0f, 1.0f) * f * cosSNi;
-  return v;
+  return Le * f * cosSNi;
 }
 
 static RGB sample_bsdf(const Scene& scene, const Isect& isect,
@@ -158,7 +145,7 @@ static RGB sample_path(int path_length, const Scene& scene,
 
   //BSDF sampling
   float bsdf_pdf;
-  //RGB BSDF = sample_bsdf(scene, V_isect, ri, bsdf_pdf);
+  RGB BSDF = sample_bsdf(scene, V_isect, ri, bsdf_pdf);
 
   //multiple importance sampling using Balance heuristics
   //TODO: review this! PBRT implementation doesn't match
@@ -167,9 +154,9 @@ static RGB sample_path(int path_length, const Scene& scene,
   //Why aren't we multiplying the two f and g, or are we doing
   //this implicitly? If we are doing this implicitly, this
   //estimate is correct (and it actually looks good)
-  //-- RGB total = (DI + BSDF) / (light_pdf + bsdf_pdf);
+  RGB total = (DI + BSDF) / (light_pdf + bsdf_pdf);
 
-  return DI; //* throughput;
+  return total * throughput;
 }
 
 RGB Pathtracer::integrate(const Vec2& uv, const Scene& scene) const
@@ -182,9 +169,9 @@ RGB Pathtracer::integrate(const Vec2& uv, const Scene& scene) const
     return scene.bgd->sample(eye_ray);
 
   RGB total_radiance(0.0f); float path_p = 1.0f;
-  float eval_probs[] = {0.9f, 0.8f, 0.4f, 0.2f, 0.1f};
+  float eval_probs[] = {0.9f, 0.8f, 0.7f, 0.5f, 0.4f};
 
-  for(int i = 1; i < 2; ++i)
+  for(int i = 1; ; ++i)
   {
     //russian roulette
     float q = (float)rand()/RAND_MAX;
@@ -194,10 +181,9 @@ RGB Pathtracer::integrate(const Vec2& uv, const Scene& scene) const
 
     //sample_path gives us the path radiance weighted by the path's
     //probability, i.e. f(X)/p(X), so we can add it directly to Li
-    RGB path_radiance = sample_path(2, scene, first_isect, eye_ray);
+    RGB path_radiance = sample_path(i, scene, first_isect, eye_ray);
 
-    //total_radiance += path_p * path_radiance;
-    total_radiance += path_radiance;
+    total_radiance += path_p * path_radiance;
   }
 
   return total_radiance;
