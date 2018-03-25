@@ -8,7 +8,9 @@
 class Triangle
 {
 public:
-  Vec3 v[3]; Vec2 uv[3];
+  Vec3 v[3];  //vertices
+  Vec2 uv[3]; //uv coordinate textures
+  Vec3 t[2];  //tangents
 
   Material::ptr material;
 
@@ -18,6 +20,7 @@ public:
       v[i] = Vec3(T * Vec4(v[i], 1.0f));
   }
 
+  void compute_tangents();
   void intersect(const Ray& ray, Isect& isect, bool bf_cull = true) const;
   void aabb(AABB& target) const;
   float area() const;

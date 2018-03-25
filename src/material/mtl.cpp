@@ -34,8 +34,4 @@ void MTL::sample_BSDF(const Vec2& uv, const Ray& wi, const Vec3& normal,
   wo_pdf = 0.159154943f; //1/2*PI
 
   //cosine sample hemisphere
-  //float u1 = (float)rand()/RAND_MAX;
-  //float u2 = (float)rand()/RAND_MAX;
-
-
 }

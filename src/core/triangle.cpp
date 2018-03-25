@@ -3,6 +3,18 @@
 #include <iostream>
 #include <glm/gtx/string_cast.hpp>
 
+void Triangle::compute_tangents()
+{
+  //TODO: hangle the case where we have no UV tex coordinates
+  Vec3 P0P2 = v[2]-v[0], P0P1 = v[1]-v[0];
+  Vec2 dUV2 = uv[2]-uv[0], dUV1 = uv[1]-uv[0];
+
+  float invDet = 1.0f / dUV2.x*dUV1.y - dUV1.x*dUV2.y;
+
+  t[0] = glm::normalize(invDet * (dUV1.y*P0P2 - dUV1.x*P0P1));
+  t[1] = glm::normalize(invDet * (dUV2.x*P0P1 - dUV2.y*P0P2));
+}
+
 float Triangle::area() const
 {
   //TODO: precompute this
@@ -40,10 +52,16 @@ void Triangle::intersect(const Ray& ray, Isect& isect, bool bf_cull) const
   float v = glm::dot(ray.d, qvec) * invDet;
   if (v < 0 || u + v > 1) return;
 
+  //compute local frame of reference
+  Vec3 normal = glm::normalize(glm::cross(v0v1, v0v2));
+  Vec3 bitangent = glm::cross( t[0], normal );
+  Mat3 world2local(t[0], normal, bitangent);
+
   isect.t = glm::dot(v0v2, qvec) * invDet;
-  isect.normal = glm::normalize(glm::cross(v0v1, v0v2));
+  isect.normal = normal;
   isect.uv = u*uv[1] + v*uv[2] + (1-u-v)*uv[0];
   isect.tri = this;
+  isect.local2world = glm::transpose(world2local);
 }
 
 void Triangle::aabb(AABB& target) const

@@ -52,6 +52,9 @@ void MeshOBJ::load_geometry_data(const std::vector<tinyobj::shape_t>& shapes,
         }
       }
 
+      //compute tangent and bitangent to this triangle
+      face.compute_tangents();
+
       //load pointer to material. all shapes share the same materials!
       //WARNING: this won't work unless .obj files with no associated .mtl
       //file set all material IDs to zero!!! also, this is why we need

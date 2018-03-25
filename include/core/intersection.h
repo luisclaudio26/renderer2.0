@@ -13,8 +13,9 @@ class Isect
 public:
   const Triangle* tri; //DO NOT DELETE THIS POINTER!!!
   float t;
-  Vec3 normal;
   Vec2 uv; //UV coordinates of the intersection point
+  Vec3 normal;
+  Mat3 local2world;
 
   //TODO: are t = INF intersections valid?
   bool is_valid() const { return t > 0 && t < FLT_MAX; }
