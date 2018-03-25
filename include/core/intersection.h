@@ -1,7 +1,6 @@
 #ifndef INTERSECTION_H
 #define INTERSECTION_H
 
-#include "material.h"
 #include "geometry.h"
 
 //forward declare triangle to avoid circularity, as triangle itself

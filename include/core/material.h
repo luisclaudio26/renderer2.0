@@ -7,6 +7,7 @@
 #include "texture.h"
 #include "spectrum.h"
 #include "geometry.h"
+#include "intersection.h"
 
 //TODO: gpurenderer's materials are represented as a union
 //here we're gonna use polymorphism, so one of the materials
@@ -27,7 +28,7 @@ public:
                       const Vec3& normal, const Vec2& uv) const = 0;
 
   //TODO: this should not be virtual. create a vector of vector
-  virtual void sample_BSDF(const Vec2& uv, const Ray& wi, const Vec3& normal,
+  virtual void sample_BSDF(const Vec2& uv, const Ray& wi, const Isect& isect,
                             Vec3& wo, float& wo_pdf, RGB& brdf) const = 0;
 
   //load material data from JSON file into material/texture vectors.

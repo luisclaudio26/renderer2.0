@@ -35,7 +35,7 @@ public:
   RGB sample(const Vec3& wi, const Vec3& wo,
               const Vec3& normal, const Vec2& uv) const override;
 
-  void sample_BSDF(const Vec2& uv, const Ray& wi, const Vec3& normal,
+  void sample_BSDF(const Vec2& uv, const Ray& wi, const Isect& isect,
                     Vec3& wo, float& wo_pdf, RGB& brdf) const override;
 
   bool is_emissive() const override

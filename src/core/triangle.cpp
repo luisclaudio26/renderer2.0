@@ -5,12 +5,23 @@
 
 void Triangle::compute_tangents()
 {
-  //TODO: hangle the case where we have no UV tex coordinates
+  Vec2 dUV1, dUV2;
+  if(uv[0].x == 0.0f && uv[0].y == 0.0f &&
+     uv[1].x == 0.0f && uv[1].y == 0.0f &&
+     uv[2].x == 0.0f && uv[2].y == 0.0f)
+  {
+    dUV1 = Vec2(0.0f, 1.0f);
+    dUV2 = Vec2(1.0f, 0.0f);
+  }
+  else
+  {
+    dUV1 = uv[1]-uv[0];
+    dUV2 = uv[2]-uv[0];
+  }
+
   Vec3 P0P2 = v[2]-v[0], P0P1 = v[1]-v[0];
-  Vec2 dUV2 = uv[2]-uv[0], dUV1 = uv[1]-uv[0];
 
   float invDet = 1.0f / dUV2.x*dUV1.y - dUV1.x*dUV2.y;
-
   t[0] = glm::normalize(invDet * (dUV1.y*P0P2 - dUV1.x*P0P1));
   t[1] = glm::normalize(invDet * (dUV2.x*P0P1 - dUV2.y*P0P2));
 }

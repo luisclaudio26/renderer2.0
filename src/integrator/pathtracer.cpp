@@ -53,7 +53,7 @@ static RGB sample_bsdf(const Scene& scene, const Isect& isect,
 {
   //sample BSDF of the intersection
   Vec3 bsdf_dir; float bsdf_pdf; RGB f;
-  isect.tri->material->sample_BSDF(isect.uv, -last_ray, isect.normal,
+  isect.tri->material->sample_BSDF(isect.uv, -last_ray, isect,
                                 bsdf_dir, bsdf_pdf, f);
 
   pdf = bsdf_pdf;
@@ -119,7 +119,7 @@ static RGB sample_path(int path_length, const Scene& scene,
     //sample BSDF to get the next direction. we are importance sampling
     //the BSDF here, trying to build a path of high contribution!
     Vec3 wo; float wo_pdf; RGB brdf;
-    V_isect.tri->material->sample_BSDF(V_isect.uv, ri, V_isect.normal,
+    V_isect.tri->material->sample_BSDF(V_isect.uv, ri, V_isect,
                                         wo, wo_pdf, brdf);
 
     //update throughput
@@ -141,7 +141,7 @@ static RGB sample_path(int path_length, const Scene& scene,
 
   //Light sampling
   float light_pdf;
-  RGB DI = sample_light(scene, V_isect, ri, light_pdf);
+  //RGB DI = sample_light(scene, V_isect, ri, light_pdf);
 
   //BSDF sampling
   float bsdf_pdf;
@@ -154,9 +154,10 @@ static RGB sample_path(int path_length, const Scene& scene,
   //Why aren't we multiplying the two f and g, or are we doing
   //this implicitly? If we are doing this implicitly, this
   //estimate is correct (and it actually looks good)
-  RGB total = (DI + BSDF) / (light_pdf + bsdf_pdf);
+  //RGB total = (DI + BSDF) / (light_pdf + bsdf_pdf);
 
-  return total * throughput;
+  //return total * throughput;
+  return BSDF;
 }
 
 RGB Pathtracer::integrate(const Vec2& uv, const Scene& scene) const
@@ -171,6 +172,7 @@ RGB Pathtracer::integrate(const Vec2& uv, const Scene& scene) const
   RGB total_radiance(0.0f); float path_p = 1.0f;
   float eval_probs[] = {0.9f, 0.8f, 0.7f, 0.5f, 0.4f};
 
+  /*
   for(int i = 1; ; ++i)
   {
     //russian roulette
@@ -185,6 +187,8 @@ RGB Pathtracer::integrate(const Vec2& uv, const Scene& scene) const
 
     total_radiance += path_p * path_radiance;
   }
+  */
 
-  return total_radiance;
+  return sample_path(2, scene, first_isect, eye_ray);
+  //return total_radiance;
 }

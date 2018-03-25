@@ -7,17 +7,21 @@ RGB MTL::sample(const Vec3& wi, const Vec3& wo,
   if( diff_tex.use_count() )
     return diff_tex->sample(uv) * 0.318309f;
   else return diffuse * 0.318309f;
-
 }
 
-void MTL::sample_BSDF(const Vec2& uv, const Ray& wi, const Vec3& normal,
+void MTL::sample_BSDF(const Vec2& uv, const Ray& wi, const Isect& isect,
                       Vec3& wo, float& wo_pdf, RGB& brdf) const
 {
   //TODO: importance sample BRDFs
   if( diff_tex.use_count() ) brdf = diff_tex->sample(uv) * 0.318309f; //1/PI
   else brdf = diffuse * 0.318309f;
 
+  //TEST: shoot rays straight up
+  wo_pdf = 1.0f;
+  wo = isect.local2world * glm::normalize(Vec3(0.0f, 1.0f, 1.0f));
+
   //uniform sample hemisphere
+  /*
   float u1 = (float)rand()/RAND_MAX;
   float u2 = (float)rand()/RAND_MAX;
 
@@ -28,10 +32,11 @@ void MTL::sample_BSDF(const Vec2& uv, const Ray& wi, const Vec3& normal,
   float y = r * sin(phi);
   wo = Vec3(x, y, z);
 
-  if( glm::dot(wo, normal) < 0 ) wo = -wo;
+  if( glm::dot(wo, isect.normal) < 0 ) wo = -wo;
 
   //PDF is constant
   wo_pdf = 0.159154943f; //1/2*PI
+  */
 
   //cosine sample hemisphere
 }
