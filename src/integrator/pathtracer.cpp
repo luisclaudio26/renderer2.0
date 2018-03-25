@@ -141,7 +141,7 @@ static RGB sample_path(int path_length, const Scene& scene,
 
   //Light sampling
   float light_pdf;
-  //RGB DI = sample_light(scene, V_isect, ri, light_pdf);
+  RGB DI = sample_light(scene, V_isect, ri, light_pdf);
 
   //BSDF sampling
   float bsdf_pdf;
@@ -154,10 +154,10 @@ static RGB sample_path(int path_length, const Scene& scene,
   //Why aren't we multiplying the two f and g, or are we doing
   //this implicitly? If we are doing this implicitly, this
   //estimate is correct (and it actually looks good)
-  //RGB total = (DI + BSDF) / (light_pdf + bsdf_pdf);
+  RGB total = (DI + BSDF) / (light_pdf + bsdf_pdf);
 
-  //return total * throughput;
-  return BSDF;
+  return total * throughput;
+  //return BSDF;
 }
 
 RGB Pathtracer::integrate(const Vec2& uv, const Scene& scene) const

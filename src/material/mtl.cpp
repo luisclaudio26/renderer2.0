@@ -12,13 +12,18 @@ RGB MTL::sample(const Vec3& wi, const Vec3& wo,
 void MTL::sample_BSDF(const Vec2& uv, const Ray& wi, const Isect& isect,
                       Vec3& wo, float& wo_pdf, RGB& brdf) const
 {
+  const float PI = 3.141592f;
+
   //TODO: importance sample BRDFs
   if( diff_tex.use_count() ) brdf = diff_tex->sample(uv) * 0.318309f; //1/PI
   else brdf = diffuse * 0.318309f;
 
   //TEST: shoot rays straight up
+  //TODO: PROBLEMS! Probably due to wrong triangle sampling
+  /*
   wo_pdf = 1.0f;
   wo = isect.local2world * glm::normalize(Vec3(0.0f, 1.0f, 1.0f));
+  */
 
   //uniform sample hemisphere
   /*
@@ -39,4 +44,15 @@ void MTL::sample_BSDF(const Vec2& uv, const Ray& wi, const Isect& isect,
   */
 
   //cosine sample hemisphere
+  float u1 = (float)rand()/RAND_MAX;
+  float u2 = (float)rand()/RAND_MAX;
+
+  const float r = sqrtf(u1);
+  const float theta = 2 * PI * u2;
+  const float x = r * cos(theta);
+  const float y = r * sin(theta);
+
+  Vec3 ray_local = Vec3(x, y, sqrt(std::max(0.0f, 1 - u1)));
+  wo = isect.local2world * ray_local;
+  wo_pdf = glm::dot(ray_local, isect.normal) / PI;
 }
