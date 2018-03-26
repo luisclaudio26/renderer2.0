@@ -60,7 +60,8 @@ static RGB sample_bsdf(const Scene& scene, const Isect& isect,
 
   //trace ray in this new direction and check whether we intersect
   //any light source
-  Ray new_ray(last_ray(isect.t)+isect.normal*0.000001f, bsdf_dir);
+  //TODO: WHY IS THIS NORMAL FLIPPED? SOMETHING TO WITH THE TANGENTS?
+  Ray new_ray(last_ray(isect.t)-isect.normal*0.000001f, bsdf_dir);
   Isect new_isect; RGB Le(0.0f);
 
   if( scene.intersect(new_ray, new_isect) )
@@ -145,7 +146,7 @@ static RGB sample_path(int path_length, const Scene& scene,
 
   //BSDF sampling
   float bsdf_pdf;
-  RGB BSDF = sample_bsdf(scene, V_isect, ri, bsdf_pdf);
+  //RGB BSDF = sample_bsdf(scene, V_isect, ri, bsdf_pdf);
 
   //multiple importance sampling using Balance heuristics
   //TODO: review this! PBRT implementation doesn't match
@@ -154,10 +155,10 @@ static RGB sample_path(int path_length, const Scene& scene,
   //Why aren't we multiplying the two f and g, or are we doing
   //this implicitly? If we are doing this implicitly, this
   //estimate is correct (and it actually looks good)
-  RGB total = (DI + BSDF) / (light_pdf + bsdf_pdf);
+  //RGB total = (DI + BSDF) / (light_pdf + bsdf_pdf);
 
-  return total * throughput;
-  //return BSDF;
+  //return total * throughput;
+  return DI;
 }
 
 RGB Pathtracer::integrate(const Vec2& uv, const Scene& scene) const
@@ -172,7 +173,6 @@ RGB Pathtracer::integrate(const Vec2& uv, const Scene& scene) const
   RGB total_radiance(0.0f); float path_p = 1.0f;
   float eval_probs[] = {0.9f, 0.8f, 0.7f, 0.5f, 0.4f};
 
-  /*
   for(int i = 1; ; ++i)
   {
     //russian roulette
@@ -187,8 +187,6 @@ RGB Pathtracer::integrate(const Vec2& uv, const Scene& scene) const
 
     total_radiance += path_p * path_radiance;
   }
-  */
 
-  return sample_path(2, scene, first_isect, eye_ray);
-  //return total_radiance;
+  return total_radiance;
 }

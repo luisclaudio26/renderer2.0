@@ -44,6 +44,7 @@ void MTL::sample_BSDF(const Vec2& uv, const Ray& wi, const Isect& isect,
   */
 
   //cosine sample hemisphere
+  //(taken from http://www.rorydriscoll.com/2009/01/07/better-sampling/)
   float u1 = (float)rand()/RAND_MAX;
   float u2 = (float)rand()/RAND_MAX;
 
@@ -51,8 +52,8 @@ void MTL::sample_BSDF(const Vec2& uv, const Ray& wi, const Isect& isect,
   const float theta = 2 * PI * u2;
   const float x = r * cos(theta);
   const float y = r * sin(theta);
-
   Vec3 ray_local = Vec3(x, y, sqrt(std::max(0.0f, 1 - u1)));
+
   wo = isect.local2world * ray_local;
   wo_pdf = glm::dot(ray_local, isect.normal) / PI;
 }

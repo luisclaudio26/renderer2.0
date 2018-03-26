@@ -6,7 +6,7 @@
 #include <chrono>
 using namespace std::chrono;
 
-#define SPP 100
+#define SPP 50
 static std::mutex mtx;
 static int n_threads;
 static float* progress_bar;
@@ -75,7 +75,7 @@ void Integrator::render_patch(ImageTools::RGBuchar* img, const Scene& scene,
         mtx.unlock();
       }
       #endif
-
+      
       img[i*hRes+j] = ImageTools::rgb_float_to_uchar(sample);
     }
 
