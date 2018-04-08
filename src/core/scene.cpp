@@ -56,10 +56,15 @@ RGB Scene::sample_light(Vec3& pos, float& pdf, const Triangle** prim) const
     return RGB(0.f);
   }
 
+  //choose a primitive to sample
   int i = rand() % emissive.size();
-  float u = (float)rand() / RAND_MAX;
-  float v = (float)rand() / RAND_MAX;
-  float w = 1 - u - v; //TODO: w may be negative! this is wrong
+
+  //triangle sampling
+  float u1 = (float)rand() / RAND_MAX;
+  float u2 = (float)rand() / RAND_MAX;
+  float u = 1 - sqrt(u1);
+  float v = u2*sqrt(u1);
+  float w = 1 - u - v;
 
   const Triangle& t = prims[emissive[i]];
 
@@ -68,5 +73,7 @@ RGB Scene::sample_light(Vec3& pos, float& pdf, const Triangle** prim) const
   *prim = &t;
 
   //emissivity * 1/pdf, where 1/pdf = 1/(1/size) = size
-  return t.material->emissivity() * (float)emissive.size();
+  //TODO: LOL?! This makes no sense. probability of sampling this
+  //point is 1/(total emissive area)
+  return t.material->emissivity(); //* (float)emissive.size();
 }

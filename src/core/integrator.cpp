@@ -43,6 +43,9 @@ void Integrator::render_patch(ImageTools::RGBuchar* img, const Scene& scene,
       //TODO: some pixels end up inevitably with values > 1.0,
       //resulting in salt-and-pepper like noise. is this common
       //in path tracers? How to better deal with these values?
+      //ANSWER: YES! Because pathtracers images are HDR. This means
+      //that the correct way of dealing with this is to tone map
+      //the final image.
       RGB sample_acc(0.f);
       for(int s = 0; s < SPP; ++s)
       {
@@ -75,7 +78,7 @@ void Integrator::render_patch(ImageTools::RGBuchar* img, const Scene& scene,
         mtx.unlock();
       }
       #endif
-      
+
       img[i*hRes+j] = ImageTools::rgb_float_to_uchar(sample);
     }
 

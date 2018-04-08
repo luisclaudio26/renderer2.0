@@ -1,5 +1,7 @@
 #include "../../include/material/mtl.h"
 #include <cstdlib>
+#include <glm/gtx/string_cast.hpp>
+#include <glm/gtc/matrix_access.hpp>
 
 RGB MTL::sample(const Vec3& wi, const Vec3& wo,
                       const Vec3& normal, const Vec2& uv) const
@@ -19,7 +21,6 @@ void MTL::sample_BSDF(const Vec2& uv, const Ray& wi, const Isect& isect,
   else brdf = diffuse * 0.318309f;
 
   //TEST: shoot rays straight up
-  //TODO: PROBLEMS! Probably due to wrong triangle sampling
   /*
   wo_pdf = 1.0f;
   wo = isect.local2world * glm::normalize(Vec3(0.0f, 1.0f, 1.0f));
@@ -45,14 +46,16 @@ void MTL::sample_BSDF(const Vec2& uv, const Ray& wi, const Isect& isect,
 
   //cosine sample hemisphere
   //(taken from http://www.rorydriscoll.com/2009/01/07/better-sampling/)
+  //TODO: SOMETHING'S WRONG! but the straight up ray shooting is right.
+  //does this mean that the problem is with the actual sampling?
   float u1 = (float)rand()/RAND_MAX;
   float u2 = (float)rand()/RAND_MAX;
 
   const float r = sqrtf(u1);
   const float theta = 2 * PI * u2;
   const float x = r * cos(theta);
-  const float y = r * sin(theta);
-  Vec3 ray_local = Vec3(x, y, sqrt(std::max(0.0f, 1 - u1)));
+  const float z = r * sin(theta);
+  Vec3 ray_local = Vec3(x, sqrt(std::max(0.0f, 1 - u1)), z);
 
   wo = isect.local2world * ray_local;
   wo_pdf = glm::dot(ray_local, isect.normal) / PI;

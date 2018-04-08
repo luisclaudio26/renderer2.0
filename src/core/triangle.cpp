@@ -72,7 +72,7 @@ void Triangle::intersect(const Ray& ray, Isect& isect, bool bf_cull) const
   isect.normal = normal;
   isect.uv = u*uv[1] + v*uv[2] + (1-u-v)*uv[0];
   isect.tri = this;
-  isect.local2world = glm::transpose(world2local);
+  isect.local2world = glm::inverse(world2local);
 }
 
 void Triangle::aabb(AABB& target) const

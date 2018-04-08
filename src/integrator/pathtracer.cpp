@@ -60,8 +60,7 @@ static RGB sample_bsdf(const Scene& scene, const Isect& isect,
 
   //trace ray in this new direction and check whether we intersect
   //any light source
-  //TODO: WHY IS THIS NORMAL FLIPPED? SOMETHING TO WITH THE TANGENTS?
-  Ray new_ray(last_ray(isect.t)-isect.normal*0.000001f, bsdf_dir);
+  Ray new_ray(last_ray(isect.t)+isect.normal*0.000001f, bsdf_dir);
   Isect new_isect; RGB Le(0.0f);
 
   if( scene.intersect(new_ray, new_isect) )
@@ -146,7 +145,7 @@ static RGB sample_path(int path_length, const Scene& scene,
 
   //BSDF sampling
   float bsdf_pdf;
-  //RGB BSDF = sample_bsdf(scene, V_isect, ri, bsdf_pdf);
+  RGB BSDF = sample_bsdf(scene, V_isect, ri, bsdf_pdf);
 
   //multiple importance sampling using Balance heuristics
   //TODO: review this! PBRT implementation doesn't match
@@ -155,10 +154,9 @@ static RGB sample_path(int path_length, const Scene& scene,
   //Why aren't we multiplying the two f and g, or are we doing
   //this implicitly? If we are doing this implicitly, this
   //estimate is correct (and it actually looks good)
-  //RGB total = (DI + BSDF) / (light_pdf + bsdf_pdf);
+  RGB total = (DI + BSDF) / (light_pdf + bsdf_pdf);
 
-  //return total * throughput;
-  return DI;
+  return total * throughput;
 }
 
 RGB Pathtracer::integrate(const Vec2& uv, const Scene& scene) const
@@ -171,22 +169,22 @@ RGB Pathtracer::integrate(const Vec2& uv, const Scene& scene) const
     return scene.bgd->sample(eye_ray);
 
   RGB total_radiance(0.0f); float path_p = 1.0f;
-  float eval_probs[] = {0.9f, 0.8f, 0.7f, 0.5f, 0.4f};
+  float eval_probs[] = {0.9f, 0.8f, 0.8f, 0.7f, 0.6f};
 
   for(int i = 1; ; ++i)
   {
     //russian roulette
     float q = (float)rand()/RAND_MAX;
-    float p = i > 5 ? 0.01f : eval_probs[i-1];
+    float p = i > 5 ? 0.5f : eval_probs[i-1];
     if(q > p) break;
     else path_p *= 1.0f / p;
 
     //sample_path gives us the path radiance weighted by the path's
     //probability, i.e. f(X)/p(X), so we can add it directly to Li
     RGB path_radiance = sample_path(i, scene, first_isect, eye_ray);
-
     total_radiance += path_p * path_radiance;
   }
 
   return total_radiance;
+  //return sample_path(1, scene, first_isect, eye_ray);
 }
