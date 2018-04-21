@@ -23,7 +23,7 @@ void MTL::sample_BSDF(const Vec2& uv, const Ray& wi, const Isect& isect,
   //TEST: shoot rays straight up
   /*
   wo_pdf = 1.0f;
-  wo = isect.local2world * glm::normalize(Vec3(0.0f, 1.0f, 1.0f));
+  wo = isect.local2world * glm::normalize(Vec3(0.0f, 1.0f, 0.0f));
   */
 
   //uniform sample hemisphere
@@ -55,8 +55,11 @@ void MTL::sample_BSDF(const Vec2& uv, const Ray& wi, const Isect& isect,
   const float theta = 2 * PI * u2;
   const float x = r * cos(theta);
   const float z = r * sin(theta);
-  Vec3 ray_local = Vec3(x, sqrt(std::max(0.0f, 1 - u1)), z);
+
+  //this should force the outgoing direction to always be in the
+  //right hemisphere
+  Vec3 ray_local = Vec3(x, sqrt(std::max(u1 - 1, 1 - u1)), z);
 
   wo = isect.local2world * ray_local;
-  wo_pdf = glm::dot(ray_local, isect.normal) / PI;
+  wo_pdf = glm::dot(ray_local, Vec3(0.0f, 1.0f, 0.0f)) / PI;
 }

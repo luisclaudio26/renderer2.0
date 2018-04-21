@@ -65,14 +65,14 @@ void Triangle::intersect(const Ray& ray, Isect& isect, bool bf_cull) const
 
   //compute local frame of reference
   Vec3 normal = glm::normalize(glm::cross(v0v1, v0v2));
-  Vec3 bitangent = glm::cross( t[0], normal );
+  Vec3 bitangent = glm::cross( normal, t[0] );
   Mat3 world2local(t[0], normal, bitangent);
 
   isect.t = glm::dot(v0v2, qvec) * invDet;
   isect.normal = normal;
   isect.uv = u*uv[1] + v*uv[2] + (1-u-v)*uv[0];
   isect.tri = this;
-  isect.local2world = glm::inverse(world2local);
+  isect.local2world = world2local; //glm::inverse(world2local);
 }
 
 void Triangle::aabb(AABB& target) const

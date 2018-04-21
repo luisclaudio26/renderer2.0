@@ -135,7 +135,7 @@ static RGB sample_path(int path_length, const Scene& scene,
     //of this path will be zero. previously we would return the background
     //multiplied by the throughput, but this makes paths of length < i contribute
     //with lighting as paths of length = i, which introduce bias.
-    if( !scene.intersect(next_ri, V_isect) ) return RGB(0.f);
+    if( !scene.intersect(next_ri, V_isect) ) return RGB(0.0f);
     else ri = next_ri;
   }
 
@@ -156,6 +156,8 @@ static RGB sample_path(int path_length, const Scene& scene,
   //estimate is correct (and it actually looks good)
   RGB total = (DI + BSDF) / (light_pdf + bsdf_pdf);
 
+  //return (DI / light_pdf) * throughput;
+  //return BSDF / bsdf_pdf * throughput;
   return total * throughput;
 }
 
@@ -169,8 +171,9 @@ RGB Pathtracer::integrate(const Vec2& uv, const Scene& scene) const
     return scene.bgd->sample(eye_ray);
 
   RGB total_radiance(0.0f); float path_p = 1.0f;
-  float eval_probs[] = {0.9f, 0.8f, 0.8f, 0.7f, 0.6f};
+  float eval_probs[] = {0.7f, 0.7f, 0.7f, 0.7f, 0.6f};
 
+  /*
   for(int i = 1; ; ++i)
   {
     //russian roulette
@@ -182,9 +185,11 @@ RGB Pathtracer::integrate(const Vec2& uv, const Scene& scene) const
     //sample_path gives us the path radiance weighted by the path's
     //probability, i.e. f(X)/p(X), so we can add it directly to Li
     RGB path_radiance = sample_path(i, scene, first_isect, eye_ray);
-    total_radiance += path_p * path_radiance;
+    total_radiance += path_radiance;
   }
+  */
 
+  for(int i = 0; i < 4; ++i)
+    total_radiance += sample_path(i, scene, first_isect, eye_ray);
   return total_radiance;
-  //return sample_path(1, scene, first_isect, eye_ray);
 }
