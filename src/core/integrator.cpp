@@ -1,5 +1,6 @@
 #include "../../include/core/integrator.h"
 #include "../../include/integrator/pathtracer.h"
+#include "../../include/integrator/directillumination.h"
 #include <thread>
 #include <mutex>
 #include <cstdio>
@@ -129,5 +130,5 @@ void Integrator::render(const Scene& scene)
 
 Integrator::ptr Integrator::load_from_json(const nlohmann::json& in)
 {
-  return Integrator::ptr( new Pathtracer );
+  return Integrator::ptr( new DirectIllumination );
 }
