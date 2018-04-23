@@ -1,60 +1,53 @@
 #include "../include/integrator/directillumination.h"
 
-static RGB sample_light(const Scene& scene, const Isect& isect,
-                          const Ray& eye_ray, float& pdf)
+static RGB sampleAllLights(const Vec3 p, const Vec3& wo,
+                            const Scene& scene, const Isect& isect)
 {
-  pdf = 0.0f;
+  RGB out(0.0f); int n_samples = 1;
 
-  //sample light source. SCENE is responsible for importance sampling
-  //lights according to radiance
-  Vec3 light_pos; float light_pdf; const Triangle* tri = NULL;
-  RGB Le = scene.sample_light(light_pos, light_pdf, &tri);
+  //loop over all lights
+  for(int l_id : scene.emissive)
+  {
+    const Triangle *l = &scene.prims[l_id];
 
-  Vec3 V = eye_ray(isect.t);
-  Vec3 v2l = light_pos - V;
-  float dist = glm::length(v2l);
-  Vec3 wo = glm::normalize(v2l);
+    //Monte Carlo approximation of the integral over hemisphere
+    //of directions
+    RGB L(0.0f);
+    for(int i = 0; i < n_samples; ++i)
+    {
+      //sample a single point on the surface of l, which is
+      //an emissive surface (so we know it won't return zero).
+      //TODO: how to actually compute this PDF? 1/area of the triangle
+      //of 1/area of the whole scene?
+      Vec3 p_light; float pdf_area;
+      RGB emission = l->sample_emissive(p_light, pdf_area);
 
-  //check visibility. If not visible, path contribution is zero!
-  //the outgoing ray intersects the light sample at t = d!
-  //We KNOW that the ray will intersect at least the light, so we don't need
-  //to assert that it hasn't escaped
-  Ray shadow(V+isect.normal*0.00001f, wo); Isect light_isect;
-  scene.intersect( shadow, light_isect );
+      //check whether this point is visible. if primitive is occluded,
+      //the contribution of this sample is zero and we can skip it
+      //TODO: handle the case where no intersection is found? Is it possible?
+      //TODO: Handle case where intersection occurs in the OPPOSITE side of the
+      //emissive triangle
+      Vec3 l2v = p - p_light;
+      Vec3 wi = glm::normalize(l2v);
+      Ray shadow(p, -wi); Isect shadow_isect;
 
-  //primitive is occluded!
-  //TODO: handle the case where no intersection is found? Is it possible?
-  if( !light_isect.is_valid() ||
-      (light_isect.is_valid() && light_isect.tri != tri) )
-      return RGB(0.f);
+      scene.intersect( shadow, shadow_isect );
+      if( !shadow_isect.is_valid() || shadow_isect.tri != l ) continue;
 
-  //cosine between light surface normal and the incoming
-  //ray (the one that exits the surface)
-  float cosSNl = glm::dot(-wo, light_isect.normal);
-  float r2 = dist*dist;
+      //primitive is unoccluded; compute the other terms of the integral
+      float cosWiN = glm::dot(-wi, isect.normal);
+      RGB brdf = isect.tri->material->sample(-wi, wo, isect.normal, isect.uv);
 
-  //if ray is perpendicular to the normal, cosSNl = 0.
-  //this makes pdf = INF, but apparently this is no problem
-  //because k/INF = 0, so this sample won't be actually used
+      //convert probability with respect to area to solid angle
+      float r2 = glm::length(l2v); float cosWiNL = glm::dot(shadow_isect.normal, wi);
+      float pdf_sa = pdf_area * r2 / cosWiNL;
 
-  //convert from area to solid angle probability
-  //pdf = light_pdf * (r2 / cosSNl);
-  pdf = light_pdf;
+      //final contribution of this sample
+      L += brdf * emission * cosWiN / pdf_sa;
+    }
 
-  //this will cause problems with specular materials (i.e. delta BSDFs)
-  RGB f = isect.tri->material->sample(-eye_ray.d, wo, isect.normal, isect.uv);
-  float cosSNi = glm::dot(wo, isect.normal);
-
-  //contribution of this sample
-  return Le * f * cosSNi;
-}
-
-static RGB sampleAllLights(const Scene& scene, const Isect& isect, const Vec3& wo)
-{
-  RGB out(0.0f);
-
-  
-
+    out += L  * (1.0f / n_samples);
+  }
 
   return out;
 }
@@ -69,11 +62,11 @@ RGB DirectIllumination::integrate(const Vec2& uv, const Scene& scene) const
     return scene.bgd->sample(eye_ray);
 
   //we had an intersection. compute lighting at this point
-  RGB L = first_isect.tri->material->emissivity(); //do non-emissive objects return 0,0,0?
+  RGB L = first_isect.tri->material->emissivity();
 
   //compute irradiance due to incident
-  Vec3 p = eye_ray(first_isect.t);
-  L += sampleAllLights(scene, first_isect, -eye_ray.d);
+  Vec3 p = eye_ray(first_isect.t) + first_isect.normal*0.000001f;
+  L += sampleAllLights(p, -eye_ray.d, scene, first_isect);
 
   return L;
 }

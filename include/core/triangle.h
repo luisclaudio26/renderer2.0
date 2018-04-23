@@ -20,6 +20,7 @@ public:
       v[i] = Vec3(T * Vec4(v[i], 1.0f));
   }
 
+  RGB sample_emissive(Vec3& p, float& pdf) const;
   void compute_tangents();
   void intersect(const Ray& ray, Isect& isect, bool bf_cull = true) const;
   void aabb(AABB& target) const;
