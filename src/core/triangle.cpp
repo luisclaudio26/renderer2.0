@@ -75,7 +75,7 @@ void Triangle::intersect(const Ray& ray, Isect& isect, bool bf_cull) const
   isect.local2world = world2local; //glm::inverse(world2local);
 }
 
-RGB Triangle::sample_emissive(Vec3& p, float& pdf) const
+RGB Triangle::sample_emissive(Vec3& p, Vec3& normal, float& pdf) const
 {
   //triangle sampling
   float u1 = (float)rand() / RAND_MAX;
@@ -84,6 +84,10 @@ RGB Triangle::sample_emissive(Vec3& p, float& pdf) const
   float y = u2*sqrt(u1);
   float z = 1 - x - y;
 
+  //normal will help us decide whether to discard this sample or not
+  //without casting shadow rays
+  //TODO: precompute normal!
+  normal = glm::normalize(glm::cross(v[1]-v[0], v[2]-v[0]));
   p = x*v[0] + y*v[1] + z*v[2];
   pdf = 1.0f / area();
   return material->emissivity();

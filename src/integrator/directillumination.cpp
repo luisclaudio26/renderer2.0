@@ -1,9 +1,17 @@
 #include "../include/integrator/directillumination.h"
 
-static RGB sampleAllLights(const Vec3 p, const Vec3& wo,
+static RGB sampleOneLight(const Vec3& p, const Vec3& wo,
                             const Scene& scene, const Isect& isect)
 {
-  RGB out(0.0f); int n_samples = 1;
+  RGB out(0.0f); int n_lights = scene.emissive.size();
+
+
+}
+
+static RGB sampleAllLights(const Vec3& p, const Vec3& wo,
+                            const Scene& scene, const Isect& isect)
+{
+  RGB out(0.0f); int n_samples = 15;
 
   //loop over all lights
   for(int l_id : scene.emissive)
@@ -19,14 +27,18 @@ static RGB sampleAllLights(const Vec3 p, const Vec3& wo,
       //an emissive surface (so we know it won't return zero).
       //TODO: how to actually compute this PDF? 1/area of the triangle
       //of 1/area of the whole scene?
-      Vec3 p_light; float pdf_area;
-      RGB emission = l->sample_emissive(p_light, pdf_area);
+      Vec3 p_light; Vec3 normal_light; float pdf_area;
+      RGB emission = l->sample_emissive(p_light, normal_light, pdf_area);
+
+      // discard sample if it comes from a light source which is not
+      // facing the point.
+      // TODO: I'm not sure this is right, but tests with Cornell box
+      // went well.
+      if( glm::dot(normal_light, isect.normal) > 0.0f ) continue;
 
       //check whether this point is visible. if primitive is occluded,
       //the contribution of this sample is zero and we can skip it
       //TODO: handle the case where no intersection is found? Is it possible?
-      //TODO: Handle case where intersection occurs in the OPPOSITE side of the
-      //emissive triangle
       Vec3 l2v = p - p_light;
       Vec3 wi = glm::normalize(l2v);
       Ray shadow(p, -wi); Isect shadow_isect;
