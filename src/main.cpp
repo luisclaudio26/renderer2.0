@@ -4,8 +4,17 @@
 #include "../include/core/sceneloader.h"
 #include "../include/core/integrator.h"
 
+#include <nanogui/opengl.h>
+#include <nanogui/glutil.h>
+#include <nanogui/screen.h>
+#include <nanogui/window.h>
+
 int main(int argc, char** args)
 {
+  //-------------
+  nanogui::init();
+
+  //-------------
   srand(0);
   FreeImage_Initialise(false);
 
