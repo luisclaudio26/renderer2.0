@@ -20,7 +20,7 @@ static RGB sampleOneLight(const Vec3& p, const Vec3& wo,
   // facing the point.
   // TODO: I'm not sure this is right, but tests with Cornell box
   // went well.
-  if( glm::dot(normal_light, isect.normal) > 0.0f ) return RGB(0.f);
+  //if( glm::dot(normal_light, isect.normal) > 0.0f ) return RGB(0.f);
 
   //check whether this point is visible. if primitive is occluded,
   //the contribution of this sample is zero and we can skip it
@@ -71,8 +71,8 @@ static RGB sampleAllLights(const Vec3& p, const Vec3& wo,
       // discard sample if it comes from a light source which is not
       // facing the point.
       // TODO: I'm not sure this is right, but tests with Cornell box
-      // went well.
-      if( glm::dot(normal_light, isect.normal) > 0.0f ) continue;
+      // went well -> turns out we cant, as the bunny scenes shows! why?
+      //if( glm::dot(normal_light, isect.normal) > 0.0f ) continue;
 
       //check whether this point is visible. if primitive is occluded,
       //the contribution of this sample is zero and we can skip it

@@ -7,7 +7,7 @@
 #include <chrono>
 using namespace std::chrono;
 
-#define SPP 20
+#define SPP 120
 static std::mutex mtx;
 static int n_threads;
 static float* progress_bar;
