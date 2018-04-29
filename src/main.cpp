@@ -4,15 +4,19 @@
 #include "../include/core/sceneloader.h"
 #include "../include/core/integrator.h"
 
-#include <nanogui/opengl.h>
-#include <nanogui/glutil.h>
-#include <nanogui/screen.h>
-#include <nanogui/window.h>
+#include "../include/frontend/gui.h"
 
 int main(int argc, char** args)
 {
   //-------------
   nanogui::init();
+
+  GUI myGUI;
+  myGUI.drawAll();
+  myGUI.setVisible(true);
+  nanogui::mainloop();
+
+  nanogui::shutdown();
 
   //-------------
   srand(0);

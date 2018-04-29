@@ -19,7 +19,8 @@ file(GLOB SOURCES "3rdparty/tiny_obj_loader.cpp"
                   "src/texture/*.cpp"
                   "src/integrator/*.cpp"
                   "src/kdtree/*.cpp"
-                  "src/material/*.cpp")
+                  "src/material/*.cpp"
+                  "src/frontend/*.cpp")
 
 #Link libraries
 link_directories(3rdparty)
