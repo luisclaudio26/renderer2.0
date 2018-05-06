@@ -20,6 +20,8 @@ public:
   GUI();
   virtual void drawContents();
   virtual void draw(NVGcontext *ctx);
+
+  void push_samples(std::vector<float>& pixel_data);
 };
 
 #endif

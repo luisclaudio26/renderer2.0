@@ -14,6 +14,7 @@ int main(int argc, char** args)
   GUI myGUI;
   myGUI.drawAll();
   myGUI.setVisible(true);
+
   nanogui::mainloop();
 
   nanogui::shutdown();

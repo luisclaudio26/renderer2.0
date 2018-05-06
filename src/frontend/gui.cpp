@@ -1,4 +1,7 @@
 #include "../include/frontend/gui.h"
+#include <nanogui/button.h>
+#include <nanogui/layout.h>
+#include <iostream>
 
 GUI::GUI() : nanogui::Screen(Eigen::Vector2i(960, 540), "Andaluz renderer")
 {
@@ -6,6 +9,25 @@ GUI::GUI() : nanogui::Screen(Eigen::Vector2i(960, 540), "Andaluz renderer")
 
   // TODO: disable window resizeability so we won't have
   // to deal with buffer reallocation
+  Window* window = new Window(this, "Options");
+  window->setPosition(Vector2i(0, 0));
+  window->setLayout(new GroupLayout());
+
+  Button *test = new Button(window, "Test");
+  test->setCallback([this] {  int n = 960*540;
+                              std::vector<float> buffer;
+                              buffer.resize(4*n);
+                              for(int i = 0; i < n*4; i += 4)
+                              {
+                                buffer[i+0] = 0.3f;
+                                buffer[i+1] = 0.6f;
+                                buffer[i+2] = 0.2f;
+                                buffer[i+3] = 1.0f;
+                              }
+                              std::cout<<"aqui\n";
+                              this->push_samples(buffer);
+                              std::cout<<"agora aqui\n";
+                            });
 
   performLayout();
 
@@ -67,3 +89,9 @@ void GUI::drawContents()
 }
 
 void GUI::draw(NVGcontext *ctx) { Screen::draw(ctx); }
+
+void GUI::push_samples(std::vector<float>& pixel_data)
+{
+  RGBA *rgba_data = reinterpret_cast<RGBA*>(pixel_data.data());
+  color_buffer_cpu = std::vector<RGBA>(rgba_data, rgba_data + pixel_data.size() / 4);
+}
