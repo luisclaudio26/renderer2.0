@@ -3,6 +3,10 @@
 #include <nanogui/layout.h>
 #include <iostream>
 
+#include "../3rdparty/json.hpp"
+#include "../include/core/sceneloader.h"
+#include "../include/core/integrator.h"
+
 GUI::GUI() : nanogui::Screen(Eigen::Vector2i(960, 540), "Andaluz renderer")
 {
   using namespace nanogui;
@@ -69,6 +73,21 @@ GUI::GUI() : nanogui::Screen(Eigen::Vector2i(960, 540), "Andaluz renderer")
   glGenTextures(1, &color_buffer_gpu);
   glBindTexture(GL_TEXTURE_2D, color_buffer_gpu);
   glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8, this->width(), this->height());
+
+  // --------- initialize renderer -----------
+  //read input file
+  std::fstream in( "../data/cornellbox.json" );
+  nlohmann::json j; in >> j;
+
+  //load data
+  SceneLoader loader;
+  loader.load_scene_from_json( j );
+
+  this->integrator = Integrator::load_from_json( j );
+
+  //preprocess scene
+  loader.generate_scene(this->scene);
+  scene->preprocess();
 };
 
 void GUI::drawContents()

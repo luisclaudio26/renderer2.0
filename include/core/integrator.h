@@ -18,10 +18,18 @@ private:
   void render_patch(ImageTools::RGBuchar* img, const Scene& scene,
                     int row, int col, int height, int width,
                     int vRes, int hRes, int thread_id);
+
+  // compute one sample per pixel in the defined region and output
+  // to the sample buffer
+  void render_pass(const Scene& scene, int vRes, int hRes,
+                    int row, int col, int height, int width,
+                    int thread_id, std::vector<float>& sample_buffer);
+
 public:
   typedef std::shared_ptr<Integrator> ptr;
 
   void render(const Scene& scene);
+  bool render(const Scene& scene, std::vector<float>& samples);
   static Integrator::ptr load_from_json(const nlohmann::json& in);
 };
 

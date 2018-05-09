@@ -9,6 +9,8 @@
 int main(int argc, char** args)
 {
   //-------------
+  srand(0);
+  FreeImage_Initialise(false);
   nanogui::init();
 
   GUI myGUI;
@@ -17,11 +19,10 @@ int main(int argc, char** args)
 
   nanogui::mainloop();
 
+  FreeImage_DeInitialise();
   nanogui::shutdown();
-
   //-------------
-  srand(0);
-  FreeImage_Initialise(false);
+  /*
 
   //read input file
   std::fstream in( args[1] );
@@ -39,9 +40,12 @@ int main(int argc, char** args)
   scene.preprocess();
 
   //hora do show
-  integrator->render(scene);
+  //integrator->render(scene);
 
-  FreeImage_DeInitialise();
+  std::vector<float> sample_buffer;
+  while( integrator->render(scene, sample_buffer) )
+    myGUI.push_samples(sample_buffer);
+  */
 
   return 0;
 }

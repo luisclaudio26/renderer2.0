@@ -7,6 +7,9 @@
 #include <nanogui/window.h>
 #include <vector>
 
+#include "../core/sceneloader.h"
+#include "../core/integrator.h"
+
 class GUI : public nanogui::Screen
 {
 private:
@@ -14,6 +17,12 @@ private:
 
   nanogui::GLShader shader;
 
+  Integrator::ptr integrator;
+  Scene scene;
+
+  //TODO: lock access to color_buffer_cpu, because the
+  //GUI thread should not read from color_buffer_cpu
+  //while the rendering thread is writing samples to it
   std::vector<RGBA> color_buffer_cpu;
   GLuint color_buffer_gpu;
 public:

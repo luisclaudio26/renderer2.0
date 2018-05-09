@@ -128,6 +128,85 @@ void Integrator::render(const Scene& scene)
   delete[] img;
 }
 
+
+//-----------
+void Integrator::render_pass(const Scene& scene, int vRes, int hRes,
+                              int row, int col, int height, int width,
+                              int thread_id, std::vector<float>& sample_buffer)
+{
+  //this function is meant to be executed by an specific thread
+  //which will render this block of WidthxHeight size, starting
+  //at (row, col)
+  int n_pixels = height*width;
+
+  for(int i = row; i < row+height; ++i)
+    for(int j = col; j < col+width; ++j)
+    {
+      float half_vRes = vRes*0.5f, half_hRes = hRes*0.5f;
+
+      float u = (j - half_hRes)/ half_hRes;
+      float v = (half_vRes - i)/ half_vRes;
+      float pixel_w = 2.0f / hRes, pixel_h = 2.0f / vRes;
+
+      //TODO: some pixels end up inevitably with values > 1.0,
+      //resulting in salt-and-pepper like noise. is this common
+      //in path tracers? How to better deal with these values?
+      //ANSWER: YES! Because pathtracers images are HDR. This means
+      //that the correct way of dealing with this is to tone map
+      //the final image.
+
+      //uniform sampling within pixel area
+      float p = (float)rand()/RAND_MAX;
+      float q = (float)rand()/RAND_MAX;
+
+      float u_ = u + p*pixel_w;
+      float v_ = v + q*pixel_h;
+      RGB sample = integrate(Vec2(u_,v_), scene);
+
+      sample_buffer[i*3*hRes+3*j+0] = sample.x;
+      sample_buffer[i*3*hRes+3*j+1] = sample.y;
+      sample_buffer[i*3*hRes+3*j+2] = sample.z;
+    }
+}
+
+bool Integrator::render(const Scene& scene, std::vector<float>& samples)
+{
+  static int nSPP = 0;
+
+  //TODO: receive this as parameter, because who commands how many pixels
+  //we want is the GUI
+  int hRes = scene.cam->hRes, vRes = scene.cam->vRes;
+
+  samples.clear(); samples.resize(3*hRes*vRes, 0.0f);
+
+  //TODO: general code for spawning threads:
+  //-> find the least p,q such that p.q = N and divide in PxQ sectors
+  //adjustments are needed because this will fail if image dimension is
+  //not multiple of p and q!!!
+  int vert_sectors = 2, hori_sectors = 4;
+  std::vector<std::thread> rendering_threads;
+
+  for(int i = 0; i < vert_sectors; ++i)
+    for(int j = 0; j < hori_sectors; ++j)
+    {
+      int height = vRes / vert_sectors;
+      int width = hRes / hori_sectors;
+      int row = i * height;
+      int col = j * width;
+
+      //TODO: CANT WE USE STD::VECTOR IN THE THREAD!?
+      rendering_threads.push_back(std::thread(&Integrator::render_pass, this,
+                                              scene, vRes, hRes,
+                                              row, col, height, width,
+                                              (i*hori_sectors)+j, samples));
+    }
+
+  for(auto t = rendering_threads.begin(); t != rendering_threads.end(); ++t)
+    t->join();
+
+  return ++nSPP == SPP;
+}
+
 Integrator::ptr Integrator::load_from_json(const nlohmann::json& in)
 {
   return Integrator::ptr( new DirectIllumination );
