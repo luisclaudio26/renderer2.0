@@ -163,19 +163,22 @@ void Integrator::render_pass(const Scene& scene, int vRes, int hRes,
       float v_ = v + q*pixel_h;
       RGB sample = integrate(Vec2(u_,v_), scene);
 
+      //TODO: apparently sample_buffer is correctly written here,
+      //but changes won't appear outside. Are we receiving a copy??
       sample_buffer[i*3*hRes+3*j+0] = sample.x;
       sample_buffer[i*3*hRes+3*j+1] = sample.y;
       sample_buffer[i*3*hRes+3*j+2] = sample.z;
     }
 }
 
-bool Integrator::render(const Scene& scene, std::vector<float>& samples)
+bool Integrator::render(const Scene& scene, std::vector<float>& samples,
+                        int hRes, int vRes)
 {
   static int nSPP = 0;
 
   //TODO: receive this as parameter, because who commands how many pixels
   //we want is the GUI
-  int hRes = scene.cam->hRes, vRes = scene.cam->vRes;
+  //int hRes = scene.cam->hRes, vRes = scene.cam->vRes;
 
   samples.clear(); samples.resize(3*hRes*vRes, 0.0f);
 
@@ -194,11 +197,12 @@ bool Integrator::render(const Scene& scene, std::vector<float>& samples)
       int row = i * height;
       int col = j * width;
 
-      //TODO: CANT WE USE STD::VECTOR IN THE THREAD!?
+      //TODO: For some reason, render_pass() is not writing samples;
+      //is it a problem with std::ref?
       rendering_threads.push_back(std::thread(&Integrator::render_pass, this,
                                               scene, vRes, hRes,
                                               row, col, height, width,
-                                              (i*hori_sectors)+j, samples));
+                                              (i*hori_sectors)+j, std::ref(samples)));
     }
 
   for(auto t = rendering_threads.begin(); t != rendering_threads.end(); ++t)

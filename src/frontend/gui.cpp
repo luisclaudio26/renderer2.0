@@ -6,6 +6,7 @@
 #include "../3rdparty/json.hpp"
 #include "../include/core/sceneloader.h"
 #include "../include/core/integrator.h"
+#include <fstream>
 
 GUI::GUI() : nanogui::Screen(Eigen::Vector2i(960, 540), "Andaluz renderer")
 {
@@ -87,15 +88,23 @@ GUI::GUI() : nanogui::Screen(Eigen::Vector2i(960, 540), "Andaluz renderer")
 
   //preprocess scene
   loader.generate_scene(this->scene);
-  scene->preprocess();
+  scene.preprocess();
 };
 
 void GUI::drawContents()
 {
+  //---------- request samples ---------
+  std::vector<float> samples;
+  integrator->render(scene, samples, this->width(), this->height());
+  this->push_samples(samples);
+
+  //---------- displaying ----------
   shader.bind();
 
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, color_buffer_gpu);
+
+  //TODO: SegFault comes from this call! Problem with color_buffer_cpu??
   glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, this->width(), this->height(),
   	               GL_RGBA, GL_FLOAT, (void*)color_buffer_cpu.data());
 
@@ -111,6 +120,7 @@ void GUI::draw(NVGcontext *ctx) { Screen::draw(ctx); }
 
 void GUI::push_samples(std::vector<float>& pixel_data)
 {
+  //TODO: what are we actually writing to color_buffer_cpu??
   RGBA *rgba_data = reinterpret_cast<RGBA*>(pixel_data.data());
   color_buffer_cpu = std::vector<RGBA>(rgba_data, rgba_data + pixel_data.size() / 4);
 }

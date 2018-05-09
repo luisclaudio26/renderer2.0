@@ -29,7 +29,8 @@ public:
   typedef std::shared_ptr<Integrator> ptr;
 
   void render(const Scene& scene);
-  bool render(const Scene& scene, std::vector<float>& samples);
+  bool render(const Scene& scene, std::vector<float>& samples,
+              int hRes, int vRes);
   static Integrator::ptr load_from_json(const nlohmann::json& in);
 };
 
