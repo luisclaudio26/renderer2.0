@@ -8,7 +8,7 @@
 #include "../include/core/integrator.h"
 #include <fstream>
 
-GUI::GUI() : nanogui::Screen(Eigen::Vector2i(960, 540), "Andaluz renderer")
+GUI::GUI() : nanogui::Screen(Eigen::Vector2i(100, 100), "Andaluz renderer", false)
 {
   using namespace nanogui;
 
@@ -47,18 +47,6 @@ GUI::GUI() : nanogui::Screen(Eigen::Vector2i(960, 540), "Andaluz renderer")
   shader.uploadAttrib<Eigen::MatrixXf>("pos", quad);
   shader.uploadAttrib<Eigen::MatrixXf>("uv_vertex", uv);
 
-  // initialize color_buffer in CPU
-  int n_pixels = this->width() * this->height();
-  color_buffer_cpu.resize(n_pixels);
-
-  for(Eigen::Vector4f &p : color_buffer_cpu)
-    p<<0.1f, 0.1f, 0.1f, 1.0f;
-
-  // initialize texture which will hold image
-  glGenTextures(1, &color_buffer_gpu);
-  glBindTexture(GL_TEXTURE_2D, color_buffer_gpu);
-  glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8, this->width(), this->height());
-
   // --------- initialize renderer -----------
   //read input file
   std::fstream in( "../data/cornellbox.json" );
@@ -73,6 +61,22 @@ GUI::GUI() : nanogui::Screen(Eigen::Vector2i(960, 540), "Andaluz renderer")
   //preprocess scene
   loader.generate_scene(this->scene);
   scene.preprocess();
+
+  // --------- set GUI parameters ----------
+  //resize according to scene
+  this->setSize( Eigen::Vector2i(scene.cam->hRes, scene.cam->vRes) );
+
+  // initialize color_buffer in CPU
+  int n_pixels = this->width() * this->height();
+  color_buffer_cpu.resize(n_pixels);
+
+  for(Eigen::Vector4f &p : color_buffer_cpu)
+    p<<0.1f, 0.1f, 0.1f, 1.0f;
+
+  // initialize texture which will hold image
+  glGenTextures(1, &color_buffer_gpu);
+  glBindTexture(GL_TEXTURE_2D, color_buffer_gpu);
+  glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8, this->width(), this->height());
 };
 
 void GUI::drawContents()
@@ -103,7 +107,25 @@ void GUI::draw(NVGcontext *ctx) { Screen::draw(ctx); }
 
 void GUI::push_samples(std::vector<float>& pixel_data)
 {
-  //TODO: what are we actually writing to color_buffer_cpu??
+  static int n_samples = 0;
+
+  n_samples++;
+
   RGBA *rgba_data = reinterpret_cast<RGBA*>(pixel_data.data());
-  color_buffer_cpu = std::vector<RGBA>(rgba_data, rgba_data + pixel_data.size() / 4);
+
+  // to compute the average:
+  // (a1 + a2 + ... + an) / n
+  // avg * n + (an+1) / (n+1)
+
+  for(int i = 0; i < pixel_data.size(); i += 4)
+  {
+    RGBA new_sample;
+    new_sample<<pixel_data[i], pixel_data[i+1], pixel_data[i+2], pixel_data[i+3];
+
+    RGBA &p = color_buffer_cpu[i/4];
+    p = ( (n_samples-1.0f) * p + new_sample) / n_samples;
+  }
+
+
+  //color_buffer_cpu = std::vector<RGBA>(rgba_data, rgba_data + pixel_data.size() / 4);
 }
