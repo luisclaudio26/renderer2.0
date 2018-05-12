@@ -165,9 +165,10 @@ void Integrator::render_pass(const Scene& scene, int vRes, int hRes,
 
       //TODO: apparently sample_buffer is correctly written here,
       //but changes won't appear outside. Are we receiving a copy??
-      sample_buffer[i*3*hRes+3*j+0] = sample.x;
-      sample_buffer[i*3*hRes+3*j+1] = sample.y;
-      sample_buffer[i*3*hRes+3*j+2] = sample.z;
+      sample_buffer[i*4*hRes+4*j+0] = sample.x;
+      sample_buffer[i*4*hRes+4*j+1] = sample.y;
+      sample_buffer[i*4*hRes+4*j+2] = sample.z;
+      sample_buffer[i*4*hRes+4*j+3] = 1.0f;
     }
 }
 
@@ -180,7 +181,7 @@ bool Integrator::render(const Scene& scene, std::vector<float>& samples,
   //we want is the GUI
   //int hRes = scene.cam->hRes, vRes = scene.cam->vRes;
 
-  samples.clear(); samples.resize(3*hRes*vRes, 0.0f);
+  samples.clear(); samples.resize(4*hRes*vRes, 0.0f);
 
   //TODO: general code for spawning threads:
   //-> find the least p,q such that p.q = N and divide in PxQ sectors

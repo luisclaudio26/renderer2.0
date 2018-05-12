@@ -18,22 +18,6 @@ GUI::GUI() : nanogui::Screen(Eigen::Vector2i(960, 540), "Andaluz renderer")
   window->setPosition(Vector2i(0, 0));
   window->setLayout(new GroupLayout());
 
-  Button *test = new Button(window, "Test");
-  test->setCallback([this] {  int n = 960*540;
-                              std::vector<float> buffer;
-                              buffer.resize(4*n);
-                              for(int i = 0; i < n*4; i += 4)
-                              {
-                                buffer[i+0] = 0.3f;
-                                buffer[i+1] = 0.6f;
-                                buffer[i+2] = 0.2f;
-                                buffer[i+3] = 1.0f;
-                              }
-                              std::cout<<"aqui\n";
-                              this->push_samples(buffer);
-                              std::cout<<"agora aqui\n";
-                            });
-
   performLayout();
 
   // TODO: initFromFiles is looking for path relative to the
@@ -110,7 +94,6 @@ void GUI::drawContents()
 
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
 
   shader.setUniform("color_buffer", 0);
   shader.drawArray(GL_TRIANGLES, 0, 6);
